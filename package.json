@@ -1,0 +1,14 @@
+{
+  "name": "iiif",
+  "version": "0.1.0",
+  "description": "IIIF processor and utilities for NodeJS",
+  "main": "index.js",
+  "repository": "https://github.com/mbklein/node-iiif",
+  "author": "Michael B. Klein",
+  "license": "Apache2",
+  "dependencies": {
+    "probe-image-size": "^4.0.0",
+    "mime-types":"^2.1.21",
+    "sharp":"^0.21.0"
+  }
+}
