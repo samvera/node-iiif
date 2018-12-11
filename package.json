@@ -1,7 +1,7 @@
 {
-  "name": "iiif",
+  "name": "iiif-image",
   "version": "0.1.0",
-  "description": "IIIF processor and utilities for NodeJS",
+  "description": "IIIF Image API modules for NodeJS",
   "main": "index.js",
   "repository": "https://github.com/mbklein/node-iiif",
   "author": "Michael B. Klein",
