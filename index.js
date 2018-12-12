@@ -27,6 +27,7 @@ class Processor {
       params = parseUrl(params);
     }
     Object.assign(this, params);
+    this.filename = [this.quality, this.format].join('.');
     this.streamResolver = streamResolver;
     this.errorClass = IIIFError;
     if (!filenameRe.test(this.filename) && this.filename != 'info.json') {
