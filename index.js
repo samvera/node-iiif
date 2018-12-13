@@ -22,12 +22,15 @@ function parseUrl(url) {
 }
 
 class Processor {
-  constructor(params, streamResolver) {
-    if (typeof params == 'string') {
+  constructor(url, streamResolver) {
+    var params = url;
+    if (typeof url == 'string') {
       params = parseUrl(params);
     }
     Object.assign(this, params);
-    this.filename = [this.quality, this.format].join('.');
+    if (this.quality && this.format) {
+      this.filename = [this.quality, this.format].join('.');
+    }
     this.streamResolver = streamResolver;
     this.errorClass = IIIFError;
     if (!filenameRe.test(this.filename) && this.filename != 'info.json') {
