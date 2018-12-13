@@ -74,32 +74,34 @@ class Processor {
   }
   
   async iiifImage() {
-    var dim = await this.dimensions();
-    var ops = new transform.Operations(dim);
-    var pipes = [
-      ops.region(this.region),
-      ops.size(this.size),
-      ops.rotation(this.rotation),
-      ops.quality(this.quality),
-      ops.format(this.format)
-    ]
+    try {
+      var dim = await this.dimensions();
+      var pipeline = new transform.Operations(dim)
+        .region(this.region)
+        .size(this.size)
+        .rotation(this.rotation)
+        .quality(this.quality)
+        .format(this.format)
+        .pipeline
 
-    var transformer = pipes.reduce((state, next) => {
-      if (next == null) {
-        return state;
-      }
-      return state.pipe(next);
-    }, this.streamResolver(this.id));
-
-    var result = await transformer.toBuffer();
-    return { contentType: mime.lookup(this.format), body: result };
+      var result = await this.streamResolver(this.id)
+        .pipe(pipeline)
+        .toBuffer();
+      return { contentType: mime.lookup(this.format), body: result };
+    } catch(err) {
+      throw new IIIFError(`Unhandled transformation error: ${err.message}`);
+    }
   }
   
   async execute() {
-    if (this.filename == 'info.json') {
-      return this.infoJson();
-    } else {
-      return this.iiifImage();
+    try {
+      if (this.filename == 'info.json') {
+        return this.infoJson();
+      } else {
+        return this.iiifImage();
+      }
+    } catch(err) {
+      console.log('Caught while executing', err.message);
     }
   }
 }
