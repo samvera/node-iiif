@@ -92,7 +92,7 @@ class Processor {
   async iiifImage () {
     try {
       var dim = await this.dimensions();
-      var pipeline = pipeline(dim);
+      var pipeline = this.pipeline(dim);
 
       var result = await this.streamResolver(this.id)
         .pipe(pipeline)
