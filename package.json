@@ -1,14 +1,35 @@
 {
-  "name": "iiif-image",
-  "version": "0.1.0",
-  "description": "IIIF Image API modules for NodeJS",
+  "name": "iiif-processor",
+  "version": "0.2.0",
+  "description": "IIIF 2.1 Image API modules for NodeJS",
   "main": "index.js",
-  "repository": "https://github.com/mbklein/node-iiif",
+  "repository": "https://github.com/nulib/node-iiif",
   "author": "Michael B. Klein",
   "license": "Apache2",
+  "scripts": {
+    "clean": "rm -rf node_modules/ vendor/ .nyc_output/ coverage/ test/fixtures/output.*",
+    "test": "semistandard && npm run test-unit",
+    "test-unit": "nyc --reporter=lcov --branches=99 mocha --slow=5000 --timeout=60000 ./test/unit/*.js"
+  },
+  "keywords": [
+    "iiif",
+    "image",
+    "libvips",
+    "vips"
+  ],
   "dependencies": {
     "probe-image-size": "^4.0.0",
-    "mime-types":"^2.1.21",
-    "sharp":"^0.21.0"
+    "mime-types": "^2.1.21",
+    "sharp": "^0.21.0"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
+    "semistandard": "^13.0.1"
+  },
+  "semistandard": {
+    "env": [
+      "mocha"
+    ]
   }
 }
