@@ -23,7 +23,7 @@
     "sharp": "^0.21.0"
   },
   "devDependencies": {
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
     "nyc": "^13.1.0",
     "semistandard": "^13.0.1"
   },
