@@ -20,7 +20,7 @@
   "dependencies": {
     "probe-image-size": "^4.0.0",
     "mime-types": "^2.1.21",
-    "sharp": "^0.21.0"
+    "sharp": "^0.22.1"
   },
   "devDependencies": {
     "mocha": "^5.2.0",
