@@ -1,6 +1,6 @@
 {
   "name": "iiif-processor",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "IIIF 2.1 Image API modules for NodeJS",
   "main": "index.js",
   "repository": "https://github.com/nulib/node-iiif",
@@ -20,11 +20,11 @@
   "dependencies": {
     "probe-image-size": "^4.0.0",
     "mime-types": "^2.1.21",
-    "sharp": "^0.21.0"
+    "sharp": "^0.24.0"
   },
   "devDependencies": {
     "mocha": "^5.2.0",
-    "nyc": "^13.1.0",
+    "nyc": "^14.1.1",
     "semistandard": "^13.0.1"
   },
   "semistandard": {
