@@ -55,6 +55,8 @@ class Processor {
       sizes.push({ width: size[0], height: size[1] });
     }
 
+    var tile_size = sizes.reverse.find(element => element.width > 512 && element.height > 512);
+
     var doc = {
       '@context': 'http://iiif.io/api/image/2/context.json',
       '@id': [this.baseUrl, encodeURIComponent(this.id)].join('/'),
@@ -64,8 +66,8 @@ class Processor {
       sizes: sizes,
       tiles: [
         {
-          width: 825,
-          height: 27000,
+          width: tile_size.width,
+          height: tile_size.height,
           scaleFactors: sizes.map((_v, i) => 2 ** i)
         }
       ],
