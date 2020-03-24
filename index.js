@@ -51,7 +51,7 @@ class Processor {
   async infoJson () {
     var dim = await this.dimensions();
     var sizes = [];
-    for (var size = [dim.width, dim.height]; size.every(x => x >= 128); size = size.map(x => Math.floor(x / 2))) {
+    for (var size = [dim.width, dim.height]; size.every(x => x >= 64); size = size.map(x => Math.floor(x / 2))) {
       sizes.push({ width: size[0], height: size[1] });
     }
 
