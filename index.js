@@ -55,7 +55,7 @@ class Processor {
       sizes.push({ width: size[0], height: size[1] });
     }
 
-    var tile_size = sizes.reverse.find(element => element.width > 512 && element.height > 512);
+    var tile_size = sizes.reverse().find(element => element.width > 512 && element.height > 512);
 
     var doc = {
       '@context': 'http://iiif.io/api/image/2/context.json',
