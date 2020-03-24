@@ -66,8 +66,8 @@ class Processor {
       sizes: sizes,
       tiles: [
         {
-          width: 1024,
-          height: 1024,
+          width: 512,
+          height: 512,
           scaleFactors: sizes.map((_v, i) => 2 ** i)
         }
       ],
