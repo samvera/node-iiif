@@ -22,7 +22,7 @@ function parseUrl (url) {
 }
 
 class Processor {
-  constructor (url, streamResolver) {
+  constructor (url, streamResolver, dimensionFunction) {
     var params = url;
     if (typeof url === 'string') {
       params = parseUrl(params);
@@ -35,6 +35,11 @@ class Processor {
     this.errorClass = IIIFError;
     if (!filenameRe.test(this.filename) && this.filename !== 'info.json') {
       throw new this.errorClass(`Invalid IIIF URL: ${url}`); // eslint-disable-line new-cap
+    }
+    if (dimensionFunction) {
+      this.dimensionFunction = dimensionFunction.bind(this);
+    } else {
+      this.dimensionFunction = this.dimensions;
     }
   }
 
@@ -49,7 +54,7 @@ class Processor {
   }
 
   async infoJson () {
-    var dim = await this.dimensions();
+    var dim = await this.dimensionFunction();
     var sizes = [];
     for (var size = [dim.width, dim.height]; size.every(x => x >= 64); size = size.map(x => Math.floor(x / 2))) {
       sizes.push({ width: size[0], height: size[1] });
@@ -91,7 +96,7 @@ class Processor {
 
   async iiifImage () {
     try {
-      var dim = await this.dimensions();
+      var dim = await this.dimensionFunction();
       var pipeline = this.pipeline(dim);
 
       var result = await this.streamResolver(this.id)
