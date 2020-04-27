@@ -22,7 +22,7 @@ function parseUrl (url) {
 }
 
 class Processor {
-  constructor (url, streamResolver, dimensionFunction, infoOptions = {}) {
+  constructor (url, streamResolver, dimensionFunction, maxWidth) {
     var params = url;
     if (typeof url === 'string') {
       params = parseUrl(params);
@@ -41,7 +41,7 @@ class Processor {
     } else {
       this.dimensionFunction = this.dimensions;
     }
-    this.infoOptions = infoOptions || {};
+    this.maxWidth = maxWidth;
   }
 
   dimensions () {
@@ -82,7 +82,7 @@ class Processor {
       }]
     };
 
-    doc = { ...doc, ...this.infoOptions };
+    if (this.maxWidth) doc.profile[1].maxWidth = this.maxWidth;
 
     return { contentType: 'application/json', body: JSON.stringify(doc) };
   }
