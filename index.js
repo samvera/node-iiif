@@ -22,7 +22,7 @@ function parseUrl (url) {
 }
 
 class Processor {
-  constructor (url, streamResolver, dimensionFunction) {
+  constructor (url, streamResolver, dimensionFunction, infoOptions = {}) {
     var params = url;
     if (typeof url === 'string') {
       params = parseUrl(params);
@@ -41,6 +41,7 @@ class Processor {
     } else {
       this.dimensionFunction = this.dimensions;
     }
+    this.infoOptions = infoOptions || {};
   }
 
   dimensions () {
@@ -60,7 +61,7 @@ class Processor {
       sizes.push({ width: size[0], height: size[1] });
     }
 
-    var doc = {
+    let doc = {
       '@context': 'http://iiif.io/api/image/2/context.json',
       '@id': [this.baseUrl, encodeURIComponent(this.id)].join('/'),
       protocol: 'http://iiif.io/api/image',
@@ -80,6 +81,8 @@ class Processor {
         supports: ['regionByPx', 'sizeByW', 'sizeByWhListed', 'cors', 'regionSquare', 'sizeByDistortedWh', 'sizeAboveFull', 'canonicalLinkHeader', 'sizeByConfinedWh', 'sizeByPct', 'jsonldMediaType', 'regionByPct', 'rotationArbitrary', 'sizeByH', 'baseUriRedirect', 'rotationBy90s', 'profileLinkHeader', 'sizeByForcedWh', 'sizeByWh', 'mirroring']
       }]
     };
+
+    doc = { ...doc, ...this.infoOptions };
 
     return { contentType: 'application/json', body: JSON.stringify(doc) };
   }
