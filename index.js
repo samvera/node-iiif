@@ -22,7 +22,7 @@ function parseUrl (url) {
 }
 
 class Processor {
-  constructor (url, streamResolver) {
+  constructor (url, streamResolver, dimensionFunction, maxWidth) {
     var params = url;
     if (typeof url === 'string') {
       params = parseUrl(params);
@@ -36,6 +36,12 @@ class Processor {
     if (!filenameRe.test(this.filename) && this.filename !== 'info.json') {
       throw new this.errorClass(`Invalid IIIF URL: ${url}`); // eslint-disable-line new-cap
     }
+    if (dimensionFunction) {
+      this.dimensionFunction = dimensionFunction;
+    } else {
+      this.dimensionFunction = this.dimensions;
+    }
+    this.maxWidth = maxWidth;
   }
 
   dimensions () {
@@ -49,13 +55,13 @@ class Processor {
   }
 
   async infoJson () {
-    var dim = await this.dimensions();
+    var dim = await this.dimensionFunction(this.id);
     var sizes = [];
-    for (var size = [dim.width, dim.height]; size.every(x => x >= 128); size = size.map(x => Math.floor(x / 2))) {
+    for (var size = [dim.width, dim.height]; size.every(x => x >= 64); size = size.map(x => Math.floor(x / 2))) {
       sizes.push({ width: size[0], height: size[1] });
     }
 
-    var doc = {
+    let doc = {
       '@context': 'http://iiif.io/api/image/2/context.json',
       '@id': [this.baseUrl, encodeURIComponent(this.id)].join('/'),
       protocol: 'http://iiif.io/api/image',
@@ -76,6 +82,8 @@ class Processor {
       }]
     };
 
+    if (this.maxWidth) doc.profile[1].maxWidth = this.maxWidth;
+
     return { contentType: 'application/json', body: JSON.stringify(doc) };
   }
 
@@ -91,7 +99,7 @@ class Processor {
 
   async iiifImage () {
     try {
-      var dim = await this.dimensions();
+      var dim = await this.dimensionFunction(this.id);
       var pipeline = this.pipeline(dim);
 
       var result = await this.streamResolver(this.id)
