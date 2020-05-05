@@ -36,26 +36,30 @@ class Processor {
     if (!filenameRe.test(this.filename) && this.filename !== 'info.json') {
       throw new this.errorClass(`Invalid IIIF URL: ${url}`); // eslint-disable-line new-cap
     }
-    if (dimensionFunction) {
-      this.dimensionFunction = dimensionFunction;
-    } else {
-      this.dimensionFunction = this.dimensions;
-    }
+    this.dimensionFunction = dimensionFunction || this.defaultDimensionFunction;
     this.maxWidth = maxWidth;
   }
 
-  dimensions () {
+  async defaultDimensionFunction (id) {
+    return await probe(this.streamResolver(id));
+  }
+
+  async dimensions () {
+    let fallback = this.dimensionFunction != this.defaultDimensionFunction;
+
     if (this.sizeInfo == null) {
-      this.sizeInfo = probe(this.streamResolver(this.id)).then(data => {
-        this.sizeInfo = data;
-        return this.sizeInfo;
-      });
+      let dims = await this.dimensionFunction(this.id);
+      if (fallback && (dims == null)) {
+        console.warn(`Unable to get dimensions for ${this.id} using custom function. Falling back to probe().`)
+        dims = await this.defaultDimensionFunction(this.id);
+      }
+      this.sizeInfo = dims;
     }
     return this.sizeInfo;
   }
 
   async infoJson () {
-    var dim = await this.dimensionFunction(this.id);
+    var dim = await this.dimensions();
     var sizes = [];
     for (var size = [dim.width, dim.height]; size.every(x => x >= 64); size = size.map(x => Math.floor(x / 2))) {
       sizes.push({ width: size[0], height: size[1] });
@@ -99,7 +103,7 @@ class Processor {
 
   async iiifImage () {
     try {
-      var dim = await this.dimensionFunction(this.id);
+      var dim = await this.dimensions();
       var pipeline = this.pipeline(dim);
 
       var result = await this.streamResolver(this.id)
