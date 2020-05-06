@@ -40,8 +40,17 @@ class Processor {
     this.maxWidth = maxWidth;
   }
 
+  async withStream(id, callback) {
+    if (this.streamResolver.length == 2) {
+      return await this.streamResolver(id, callback);
+    } else {
+      let stream = await this.streamResolver(id);
+      return await callback(stream);
+    }
+  }
+
   async defaultDimensionFunction (id) {
-    return await probe(this.streamResolver(id));
+    return await this.withStream(id, async (stream)=>{ return await probe(stream) });
   }
 
   async dimensions () {
@@ -106,9 +115,9 @@ class Processor {
       var dim = await this.dimensions();
       var pipeline = this.pipeline(dim);
 
-      var result = await this.streamResolver(this.id)
-        .pipe(pipeline)
-        .toBuffer();
+      var result = await this.withStream(this.id, (async (stream) => {
+        return await stream.pipe(pipeline).toBuffer();
+      }));
       return { contentType: mime.lookup(this.format), body: result };
     } catch (err) {
       throw new IIIFError(`Unhandled transformation error: ${err.message}`);

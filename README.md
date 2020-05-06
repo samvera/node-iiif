@@ -18,19 +18,43 @@ function, which takes an ID and returns an open [Readable Stream](https://nodejs
 #### Pairtree File Source
 ```javascript
 function streamResolver(id) {
-  var imagePath = '/path/to/image/root/' + id.match(/.{1,2}/g).join('/') + '/image.tif'
+  let imagePath = '/path/to/image/root/' + id.match(/.{1,2}/g).join('/') + '/image.tif';
   return fs.createReadStream(imagePath);
 }
 ```
+
+The Stream Resolver can also take an async callback as its second parameter, in which 
+case it should return the value of applying the callback to the stream. This allows
+the function to do its own cleanup.
 
 #### Amazon S3 Bucket Source
 ```javascript
 const AWS = require('aws-sdk');
 
-function streamResolver(id) {
-  var s3 = new AWS.S3();
-  var key = id + '.tif';
-  return s3.getObject({ Bucket: 'my-tiff-bucket', Key: key }).createReadStream();
+async function streamResolver(id, callback) {
+  let s3 = new AWS.S3();
+  let key = id + '.tif';
+  let request = s3.getObject({ Bucket: 'my-tiff-bucket', Key: key });
+  let stream = request.createReadStream();
+  try {
+    return await callback(stream);
+  } finally {
+    stream.end().destroy();
+    request.abort();
+  }
+}
+```
+
+### Dimension Callback
+
+The calling function can also supply the processor with an optional Dimension 
+callback that takes an ID and returns a `{width: w, height: h}` object. This
+allows for caching dimensions and avoiding an expensive image request.
+
+```javascript
+async function dimensionResolver(id, callback) {
+  let dimensions = lookDimensionsUpInDatabase(id);
+  return { width: dimensions.width, height: dimensions.height };
 }
 ```
 
@@ -40,8 +64,8 @@ function streamResolver(id) {
 ```javascript
 const IIIF = require('iiif-processor');
 
-var url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-var processor = new IIIF.Processor(url, streamResolver);
+let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
+let processor = new IIIF.Processor(url, streamResolver);
 processor.execute()
   .then(result => return result)
   .catch(err => handleError(err));
@@ -51,10 +75,10 @@ processor.execute()
 ```javascript
 const IIIF = require('iiif-processor');
 
-var url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-var processor = new IIIF.Processor(url, streamResolver);
+let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
+let processor = new IIIF.Processor(url, streamResolver, dimensionResolver);
 try {
-  var result = await processor.execute();
+  let result = await processor.execute();
   return result;
 } catch (err) {
   handleError(err);
