@@ -1,5 +1,9 @@
 # iiif-processor
 
+[![Build Status](https://circleci.com/gh/nulib/node-iiif.svg?style=svg)](https://circleci.com/gh/nulib/node-iiif)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c9b1d0ddb5d4ca1d8a00/maintainability)](https://codeclimate.com/github/nulib/node-iiif/maintainability)
+[![Test Coverage](https://coveralls.io/repos/github/nulib/node-iiif/badge.svg)](https://coveralls.io/github/nulib/node-iiif)
+
 This module provides a full-featured [IIIF Image API 2.1](https://iiif.io/api/image/2.1/) image processor. It covers only the image processing pipeline itself, leaving input and output to the caller.
 
 ## Install with NPM

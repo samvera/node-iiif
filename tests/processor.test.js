@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const iiif = require('../../index');
+const iiif = require('../index');
 
 var subject;
 
