@@ -7,9 +7,9 @@
   "author": "Michael B. Klein",
   "license": "Apache2",
   "scripts": {
-    "clean": "rm -rf node_modules/ vendor/ .nyc_output/ coverage/ test/fixtures/output.*",
-    "test": "semistandard && npm run test-unit",
-    "test-unit": "nyc --reporter=lcov --branches=99 mocha --slow=5000 --timeout=60000 ./test/unit/*.js"
+    "clean": "rm -rf node_modules/ vendor/ coverage/",
+    "lint": "eslint index.js lib/*.js",
+    "test": "node scripts/test.js --env=jsdom"
   },
   "keywords": [
     "iiif",
@@ -23,13 +23,26 @@
     "sharp": "^0.25.2"
   },
   "devDependencies": {
-    "mocha": "^5.2.0",
-    "nyc": "^14.1.1",
-    "semistandard": "^13.0.1"
+    "coveralls": "^3.1.0",
+    "eslint": "^7.10.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.0.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "jest": "^26.4.2"
   },
-  "semistandard": {
-    "env": [
-      "mocha"
+  "jest": {
+    "collectCoverageFrom": [
+      "./*.js", "lib/**/*.js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"
+    ],
+    "testEnvironment": "node",
+    "moduleDirectories": [
+      "node_modules"
     ]
   }
 }
