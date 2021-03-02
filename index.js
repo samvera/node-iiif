@@ -3,7 +3,14 @@ const mime = require('mime-types');
 const transform = require('./lib/transform');
 const IIIFError = require('./lib/error');
 
-const filenameRe = new RegExp('(color|gray|bitonal|default)\.(jpg|tif|gif|png|webp)'); // eslint-disable-line no-useless-escape
+const filenameRe = new RegExp('(color|gray|bitonal|default)\.(jpe?g|tiff?|gif|png|webp)'); // eslint-disable-line no-useless-escape
+const outputType = {
+  "jpg": "jpg",
+  "tif": "tiff",
+  "gif": "gif",
+  "png": "png",
+  "webp": "webp"
+}
 
 function parseUrl (url) {
   var result = {};
