@@ -1,6 +1,6 @@
 {
   "name": "iiif-processor",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "IIIF 2.1 Image API modules for NodeJS",
   "main": "index.js",
   "repository": "https://github.com/nulib/node-iiif",
@@ -18,8 +18,8 @@
     "vips"
   ],
   "dependencies": {
-    "probe-image-size": "^4.0.0",
     "mime-types": "^2.1.21",
+    "probe-image-size": "^4.0.0",
     "sharp": "^0.25.2"
   },
   "devDependencies": {
@@ -35,7 +35,8 @@
   },
   "jest": {
     "collectCoverageFrom": [
-      "./*.js", "lib/**/*.js"
+      "./*.js",
+      "lib/**/*.js"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"

@@ -29,7 +29,7 @@ function parseUrl (url) {
 }
 
 class Processor {
-  constructor (url, streamResolver, dimensionFunction, maxWidth) {
+  constructor (url, streamResolver, dimensionFunction, maxWidth, includeMetadata) {
     var params = url;
     if (typeof url === 'string') {
       params = parseUrl(params);
@@ -45,6 +45,7 @@ class Processor {
     }
     this.dimensionFunction = dimensionFunction || this.defaultDimensionFunction;
     this.maxWidth = maxWidth;
+    this.includeMetadata = includeMetadata ? true : false;
   }
 
   async withStream(id, callback) {
@@ -114,6 +115,7 @@ class Processor {
       .rotation(this.rotation)
       .quality(this.quality)
       .format(this.format)
+      .withMetadata(this.includeMetadata)
       .pipeline;
   }
 

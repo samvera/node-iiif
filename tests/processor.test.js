@@ -31,6 +31,21 @@ describe('IIIF Processor', () => {
     assert.strictEqual(opts.heightPre, 40);
     assert.strictEqual(opts.formatOut, 'png');
     assert.strictEqual(opts.canvas, 'crop');
+    assert.strictEqual(opts.withMetadata, false);
+  });
+});
+
+describe('Include metadata', () => {
+  beforeEach(() => {
+    subject = new iiif.Processor('https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.jpg', id => id, null, null, true);
+  });
+
+  it('Includes preexisting metadata', () => {
+    var dims = { width: 1024, height: 768 };
+    var pipe = subject.pipeline(dims);
+    var opts = pipe.options;
+
+    assert.strictEqual(opts.withMetadata, true);
   });
 });
 
