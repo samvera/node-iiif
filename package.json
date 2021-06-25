@@ -3,7 +3,7 @@
   "version": "0.3.6",
   "description": "IIIF 2.1 Image API modules for NodeJS",
   "main": "index.js",
-  "repository": "https://github.com/nulib/node-iiif",
+  "repository": "https://github.com/samvera-labs/node-iiif",
   "author": "Michael B. Klein",
   "license": "Apache2",
   "scripts": {

@@ -1,8 +1,8 @@
 # iiif-processor
 
-[![Build Status](https://circleci.com/gh/nulib/node-iiif.svg?style=svg)](https://circleci.com/gh/nulib/node-iiif)
-[![Maintainability](https://api.codeclimate.com/v1/badges/c9b1d0ddb5d4ca1d8a00/maintainability)](https://codeclimate.com/github/nulib/node-iiif/maintainability)
-[![Test Coverage](https://coveralls.io/repos/github/nulib/node-iiif/badge.svg)](https://coveralls.io/github/nulib/node-iiif)
+[![Build Status](https://circleci.com/gh/samvera-labs/node-iiif.svg?style=svg)](https://circleci.com/gh/samvera-labs/node-iiif)
+[![Maintainability](https://api.codeclimate.com/v1/badges/1f771d90d694b2798fb5/maintainability)](https://codeclimate.com/github/samvera-labs/node-iiif/maintainability)
+[![Test Coverage](https://coveralls.io/repos/github/samvera-labs/node-iiif/badge.svg)](https://coveralls.io/github/samvera-labs/node-iiif)
 
 This module provides a full-featured [IIIF Image API 2.1](https://iiif.io/api/image/2.1/) image processor. It covers only the image processing pipeline itself, leaving input and output to the caller.
 
@@ -94,17 +94,6 @@ try {
 Contributions are welcome in the form of bug reports, suggestions, pull requests,
 and/or documentation.
 
-### Licensing
+### License
 
-Copyright 2019 Northwestern University and contributors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-[https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+`node-iiif` is available under [the Apache 2.0 license](LICENSE).
