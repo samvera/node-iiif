@@ -3,7 +3,8 @@
     "standard"
   ],
   "env" : {
-    "browser"               : false
+    "browser"               : false,
+    "jest/globals"          : true
   },
   "globals" : {
     "__DEV__"               : false,
@@ -11,6 +12,7 @@
     "__PROD__"              : false,
     "__COVERAGE__"          : false
   },
+  "plugins": ["jest"],
   "rules" : {
     "brace-style"           : [2, "1tbs"],
     "comma-dangle"          : [2, "never"],
