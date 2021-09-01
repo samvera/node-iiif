@@ -5,10 +5,11 @@
   "main": "index.js",
   "repository": "https://github.com/samvera-labs/node-iiif",
   "author": "Michael B. Klein",
-  "license": "Apache2",
+  "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf node_modules/ vendor/ coverage/",
     "lint": "eslint index.js lib/*.js",
+    "lint-fix": "eslint --fix index.js lib/*.js",
     "test": "node scripts/test.js --env=jsdom"
   },
   "keywords": [

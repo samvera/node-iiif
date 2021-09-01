@@ -3,18 +3,11 @@ const mime = require('mime-types');
 const transform = require('./lib/transform');
 const IIIFError = require('./lib/error');
 
-const filenameRe = new RegExp('(color|gray|bitonal|default)\.(jpe?g|tiff?|gif|png|webp)'); // eslint-disable-line no-useless-escape
-const outputType = {
-  "jpg": "jpg",
-  "tif": "tiff",
-  "gif": "gif",
-  "png": "png",
-  "webp": "webp"
-}
+const filenameRe = /(color|gray|bitonal|default)\.(jpe?g|tiff?|gif|png|webp)/;
 
 function parseUrl (url) {
-  var result = {};
-  var segments = url.split('/');
+  const result = {};
+  const segments = url.split('/');
   result.filename = segments.pop();
   if (result.filename.match(filenameRe)) {
     result.rotation = segments.pop();
@@ -30,44 +23,54 @@ function parseUrl (url) {
 
 class Processor {
   constructor (url, streamResolver, dimensionFunction, maxWidth, includeMetadata) {
-    var params = url;
+    this.initialize(url);
+
+    if (!filenameRe.test(this.filename) && this.filename !== 'info.json') {
+      throw new this.errorClass(`Invalid IIIF URL: ${url}`); // eslint-disable-line new-cap
+    }
+
+    this.streamResolver = streamResolver;
+    this.dimensionFunction = dimensionFunction || this.defaultDimensionFunction;
+    this.maxWidth = maxWidth;
+    this.includeMetadata = !!includeMetadata;
+  }
+
+  initialize (url) {
+    let params = url;
     if (typeof url === 'string') {
       params = parseUrl(params);
     }
     Object.assign(this, params);
+
     if (this.quality && this.format) {
       this.filename = [this.quality, this.format].join('.');
     }
-    this.streamResolver = streamResolver;
+
     this.errorClass = IIIFError;
-    if (!filenameRe.test(this.filename) && this.filename !== 'info.json') {
-      throw new this.errorClass(`Invalid IIIF URL: ${url}`); // eslint-disable-line new-cap
-    }
-    this.dimensionFunction = dimensionFunction || this.defaultDimensionFunction;
-    this.maxWidth = maxWidth;
-    this.includeMetadata = includeMetadata ? true : false;
   }
 
-  async withStream(id, callback) {
-    if (this.streamResolver.length == 2) {
+  async withStream (id, callback) {
+    if (this.streamResolver.length === 2) {
       return await this.streamResolver(id, callback);
     } else {
-      let stream = await this.streamResolver(id);
+      const stream = await this.streamResolver(id);
       return await callback(stream);
     }
   }
 
   async defaultDimensionFunction (id) {
-    return await this.withStream(id, async (stream)=>{ return await probe(stream) });
+    return await this.withStream(id, async (stream) => {
+      return await probe(stream);
+    });
   }
 
   async dimensions () {
-    let fallback = this.dimensionFunction != this.defaultDimensionFunction;
+    const fallback = this.dimensionFunction !== this.defaultDimensionFunction;
 
-    if (this.sizeInfo == null) {
+    if (this.sizeInfo === null) {
       let dims = await this.dimensionFunction(this.id);
-      if (fallback && (dims == null)) {
-        console.warn(`Unable to get dimensions for ${this.id} using custom function. Falling back to probe().`)
+      if (fallback && (dims === null)) {
+        console.warn(`Unable to get dimensions for ${this.id} using custom function. Falling back to probe().`);
         dims = await this.defaultDimensionFunction(this.id);
       }
       this.sizeInfo = dims;
@@ -76,13 +79,21 @@ class Processor {
   }
 
   async infoJson () {
-    var dim = await this.dimensions();
-    var sizes = [];
-    for (var size = [dim.width, dim.height]; size.every(x => x >= 64); size = size.map(x => Math.floor(x / 2))) {
+    const dim = await this.dimensions();
+    const sizes = [];
+    for (let size = [dim.width, dim.height]; size.every((x) => x >= 64); size = size.map((x) => Math.floor(x / 2))) {
       sizes.push({ width: size[0], height: size[1] });
     }
 
-    let doc = {
+    const doc = this.infoDoc(dim, sizes);
+
+    if (this.maxWidth) doc.profile[1].maxWidth = this.maxWidth;
+
+    return { contentType: 'application/json', body: JSON.stringify(doc) };
+  }
+
+  infoDoc (dim, sizes) {
+    return {
       '@context': 'http://iiif.io/api/image/2/context.json',
       '@id': [this.baseUrl, encodeURIComponent(this.id)].join('/'),
       protocol: 'http://iiif.io/api/image',
@@ -96,16 +107,15 @@ class Processor {
           scaleFactors: sizes.map((_v, i) => 2 ** i)
         }
       ],
-      profile: ['http://iiif.io/api/image/2/level2.json', {
-        formats: transform.Formats,
-        qualities: transform.Qualities,
-        supports: ['regionByPx', 'sizeByW', 'sizeByWhListed', 'cors', 'regionSquare', 'sizeByDistortedWh', 'sizeAboveFull', 'canonicalLinkHeader', 'sizeByConfinedWh', 'sizeByPct', 'jsonldMediaType', 'regionByPct', 'rotationArbitrary', 'sizeByH', 'baseUriRedirect', 'rotationBy90s', 'profileLinkHeader', 'sizeByForcedWh', 'sizeByWh', 'mirroring']
-      }]
+      profile: [
+        'http://iiif.io/api/image/2/level2.json',
+        {
+          formats: transform.Formats,
+          qualities: transform.Qualities,
+          supports: ['regionByPx', 'sizeByW', 'sizeByWhListed', 'cors', 'regionSquare', 'sizeByDistortedWh', 'sizeAboveFull', 'canonicalLinkHeader', 'sizeByConfinedWh', 'sizeByPct', 'jsonldMediaType', 'regionByPct', 'rotationArbitrary', 'sizeByH', 'baseUriRedirect', 'rotationBy90s', 'profileLinkHeader', 'sizeByForcedWh', 'sizeByWh', 'mirroring']
+        }
+      ]
     };
-
-    if (this.maxWidth) doc.profile[1].maxWidth = this.maxWidth;
-
-    return { contentType: 'application/json', body: JSON.stringify(doc) };
   }
 
   pipeline (dim) {
@@ -115,18 +125,17 @@ class Processor {
       .rotation(this.rotation)
       .quality(this.quality)
       .format(this.format)
-      .withMetadata(this.includeMetadata)
-      .pipeline;
+      .withMetadata(this.includeMetadata).pipeline;
   }
 
   async iiifImage () {
     try {
-      var dim = await this.dimensions();
-      var pipeline = this.pipeline(dim);
+      const dim = await this.dimensions();
+      const pipeline = this.pipeline(dim);
 
-      var result = await this.withStream(this.id, (async (stream) => {
+      const result = await this.withStream(this.id, async (stream) => {
         return await stream.pipe(pipeline).toBuffer();
-      }));
+      });
       return { contentType: mime.lookup(this.format), body: result };
     } catch (err) {
       throw new IIIFError(`Unhandled transformation error: ${err.message}`);
