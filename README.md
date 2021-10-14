@@ -27,7 +27,7 @@ function streamResolver(id) {
 }
 ```
 
-The Stream Resolver can also take an async callback as its second parameter, in which 
+The Stream Resolver can also take an async callback as its second parameter, in which
 case it should return the value of applying the callback to the stream. This allows
 the function to do its own cleanup.
 
@@ -51,7 +51,7 @@ async function streamResolver(id, callback) {
 
 ### Dimension Callback
 
-The calling function can also supply the processor with an optional Dimension 
+The calling function can also supply the processor with an optional Dimension
 callback that takes an ID and returns a `{width: w, height: h}` object. This
 allows for caching dimensions and avoiding an expensive image request.
 
@@ -91,8 +91,11 @@ try {
 
 ### Contributing
 
-Contributions are welcome in the form of bug reports, suggestions, pull requests,
-and/or documentation.
+Contributions are welcome in the form of bug reports, suggestions, pull requests, and/or documentation.
+
+If you're working on a PR for this project, create a feature branch off of `main`.
+
+This repository follows the [Samvera Community Code of Conduct](https://samvera.atlassian.net/wiki/spaces/samvera/pages/405212316/Code+of+Conduct) and [language recommendations](https://github.com/samvera/maintenance/blob/master/templates/CONTRIBUTING.md#language).  Please ***do not*** create a branch called `master` for this repository or as part of your pull request; the branch will either need to be removed or renamed before it can be considered for inclusion in the code base and history of this repository.
 
 ### License
 
