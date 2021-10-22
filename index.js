@@ -67,9 +67,9 @@ class Processor {
   async dimensions () {
     const fallback = this.dimensionFunction !== this.defaultDimensionFunction;
 
-    if (this.sizeInfo === null) {
+    if (!this.sizeInfo) {
       let dims = await this.dimensionFunction(this.id);
-      if (fallback && (dims === null)) {
+      if (fallback && !dims) {
         console.warn(`Unable to get dimensions for ${this.id} using custom function. Falling back to probe().`);
         dims = await this.defaultDimensionFunction(this.id);
       }
