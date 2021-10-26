@@ -22,31 +22,58 @@ function parseUrl (url) {
 }
 
 class Processor {
-  constructor (url, streamResolver, dimensionFunction, maxWidth, includeMetadata) {
-    this.initialize(url);
+  constructor (url, streamResolver, ...args) {
+    const opts = this.parseOpts(args);
+
+    this
+      .initialize(url, streamResolver)
+      .setOpts(opts);
 
     if (!filenameRe.test(this.filename) && this.filename !== 'info.json') {
-      throw new this.errorClass(`Invalid IIIF URL: ${url}`); // eslint-disable-line new-cap
+      throw new IIIFError(`Invalid IIIF URL: ${url}`);
     }
 
-    this.streamResolver = streamResolver;
-    this.dimensionFunction = dimensionFunction || this.defaultDimensionFunction;
-    this.maxWidth = maxWidth;
-    this.includeMetadata = !!includeMetadata;
+    if (typeof streamResolver !== 'function') {
+      throw new IIIFError('streamResolver option must be specified');
+    }
   }
 
-  initialize (url) {
+  parseOpts (args) {
+    if (args.length >= 1 && typeof args[0] === 'function') {
+      console.warn('Passing dimensionFunction, maxWidth, and includeMetadata as separate parameters is deprecated. Please see the documentation.');
+      return {
+        dimensionFunction: args.shift(),
+        maxWidth: args.shift(),
+        includeMetadata: args.shift()
+      };
+    } else if (args.length === 1 && typeof args[0] === 'object') {
+      return args[0];
+    } else {
+      return {};
+    }
+  }
+
+  setOpts (opts) {
+    this.errorClass = IIIFError;
+    this.dimensionFunction = opts.dimensionFunction || this.defaultDimensionFunction;
+    this.maxWidth = opts.maxWidth;
+    this.includeMetadata = !!opts.includeMetadata;
+    this.density = opts.density || null;
+    return this;
+  }
+
+  initialize (url, streamResolver) {
     let params = url;
     if (typeof url === 'string') {
       params = parseUrl(params);
     }
     Object.assign(this, params);
+    this.streamResolver = streamResolver;
 
     if (this.quality && this.format) {
       this.filename = [this.quality, this.format].join('.');
     }
-
-    this.errorClass = IIIFError;
+    return this;
   }
 
   async withStream (id, callback) {
@@ -124,7 +151,7 @@ class Processor {
       .size(this.size)
       .rotation(this.rotation)
       .quality(this.quality)
-      .format(this.format)
+      .format(this.format, this.density)
       .withMetadata(this.includeMetadata).pipeline;
   }
 
