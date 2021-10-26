@@ -12,6 +12,23 @@ This module provides a full-featured [IIIF Image API 2.1](https://iiif.io/api/im
 npm install iiif-processor --save
 ```
 
+## Usage
+
+```javascript
+const IIIF = require('iiif-processor');
+
+const processor = new IIIF.Processor(url, streamResolver, opts);
+```
+
+* `streamResolver` (function, required) – a callback function that returns a readable image stream for a given ID (see below)
+* `opts`:
+  * `dimensionFunction` (function) – a callback function that returns the image dimensions for a given ID (see below)
+  * `maxWidth` (integer) – the maximum width of an image that can be returned
+  * `includeMetadata` (boolean) – if `true`, all metadata from the source image will be copied to the result
+  * `density` (integer) – the pixel density to be included in the result image in pixels per inch
+    * This has no effect whatsoever on the size of the image that gets returned; it's simply for convenience when using
+      the resulting image in software that calculates a default print size based on the height, width, and density
+
 ## Examples
 
 ### Stream Resolver
@@ -69,9 +86,9 @@ async function dimensionResolver(id, callback) {
 const IIIF = require('iiif-processor');
 
 let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver);
+let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction: dimensionResolver });
 processor.execute()
-  .then(result => return result)
+  .then(result => handleResult(result))
   .catch(err => handleError(err));
 ```
 
@@ -80,7 +97,7 @@ processor.execute()
 const IIIF = require('iiif-processor');
 
 let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver, dimensionResolver);
+let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction: dimensionResolver });
 try {
   let result = await processor.execute();
   return result;
