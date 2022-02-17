@@ -1,6 +1,6 @@
 {
   "name": "iiif-processor",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "IIIF 2.1 Image API modules for NodeJS",
   "main": "index.js",
   "repository": "https://github.com/samvera-labs/node-iiif",

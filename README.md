@@ -20,9 +20,9 @@ const IIIF = require('iiif-processor');
 const processor = new IIIF.Processor(url, streamResolver, opts);
 ```
 
-* `streamResolver` (function, required) – a callback function that returns a readable image stream for a given ID (see below)
+* `streamResolver` (function, required) – a callback function that returns a readable image stream for a given request (see below)
 * `opts`:
-  * `dimensionFunction` (function) – a callback function that returns the image dimensions for a given ID (see below)
+  * `dimensionFunction` (function) – a callback function that returns the image dimensions for a given request (see below)
   * `maxWidth` (integer) – the maximum width of an image that can be returned
   * `includeMetadata` (boolean) – if `true`, all metadata from the source image will be copied to the result
   * `density` (integer) – the pixel density to be included in the result image in pixels per inch
@@ -34,11 +34,13 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
 ### Stream Resolver
 
 The calling function must supply the processor with a Stream Resolver callback
-function, which takes an ID and returns an open [Readable Stream](https://nodejs.org/api/stream.html#stream_class_stream_readable) from which the source image can be read.
+function, which takes information about the request [(`id` and `baseUrl`)](#id--baseurl) and returns an open
+[Readable Stream](https://nodejs.org/api/stream.html#stream_class_stream_readable) from which the source image can be read.
 
 #### Pairtree File Source
+
 ```javascript
-function streamResolver(id) {
+function streamResolver({ id, baseUrl }) {
   let imagePath = '/path/to/image/root/' + id.match(/.{1,2}/g).join('/') + '/image.tif';
   return fs.createReadStream(imagePath);
 }
@@ -49,10 +51,11 @@ case it should return the value of applying the callback to the stream. This all
 the function to do its own cleanup.
 
 #### Amazon S3 Bucket Source
+
 ```javascript
 const AWS = require('aws-sdk');
 
-async function streamResolver(id, callback) {
+async function streamResolver({ id, baseUrl }, callback) {
   let s3 = new AWS.S3();
   let key = id + '.tif';
   let request = s3.getObject({ Bucket: 'my-tiff-bucket', Key: key });
@@ -66,14 +69,15 @@ async function streamResolver(id, callback) {
 }
 ```
 
-### Dimension Callback
+### Dimension Function
 
 The calling function can also supply the processor with an optional Dimension
-callback that takes an ID and returns a `{width: w, height: h}` object. This
-allows for caching dimensions and avoiding an expensive image request.
+callback that takes information about the request [(`id` and `baseUrl`)](#id--baseurl) and returns a
+`{width: w, height: h}` object.
+This allows for caching dimensions and avoiding an expensive image request.
 
 ```javascript
-async function dimensionResolver(id, callback) {
+async function dimensionFunction({ id, baseUrl }) {
   let dimensions = lookDimensionsUpInDatabase(id);
   return { width: dimensions.width, height: dimensions.height };
 }
@@ -86,7 +90,7 @@ async function dimensionResolver(id, callback) {
 const IIIF = require('iiif-processor');
 
 let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction: dimensionResolver });
+let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction });
 processor.execute()
   .then(result => handleResult(result))
   .catch(err => handleError(err));
@@ -97,7 +101,7 @@ processor.execute()
 const IIIF = require('iiif-processor');
 
 let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction: dimensionResolver });
+let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction });
 try {
   let result = await processor.execute();
   return result;
@@ -105,6 +109,38 @@ try {
   handleError(err);
 }
 ```
+
+### `id` / `baseUrl`
+
+The [stream resolver](#stream-resolver) and [dimensions function](#dimension-function) functions both accept an object with
+`id` and `baseUrl` specified.
+
+For instance, for the request:
+
+> https://example.org/iiif/assets/42562145-0998-4b67-bab0-6028328f8319.png/10,20,30,40/pct:50/45/default.png
+
+The `id` parameter is `42562145-0998-4b67-bab0-6028328f8319.png` and the `baseUrl` is `https://example.org/iiif/assets`.
+
+### Breaking Changes
+
+#### v1 -> v2
+
+* The `id` parameter passed to the [stream resolver](#stream-resolver) and [dimensions callback](#dimension-function) was
+  changed from a `string` to an `object` containing the `id` and `baseUrl`.
+
+  To maintain the existing behavior, you can use destructuring of the argument. For example:
+
+  ```js
+  streamResolver(id) { }               // old
+  streamResolver(id, callback) { }     // old
+  streamResolver({ id }) { }           // new
+  streamResolver({ id }, callback) { } // new
+
+  dimensionFunction(id) { }            // old
+  dimensionFunction({ id }) { }        // new
+  ```
+
+  See [issue #19](https://github.com/samvera-labs/node-iiif/issues/19) for context on why this change was made.
 
 ### Contributing
 

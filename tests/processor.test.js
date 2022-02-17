@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const { Stream } = require('stream');
 const iiif = require('../index');
 
 let subject;
@@ -9,7 +10,7 @@ const dims = { width: 1024, height: 768 };
 
 describe('IIIF Processor', () => {
   beforeEach(() => {
-    subject = new iiif.Processor(`${base}/10,20,30,40/pct:50/45/default.png`, (id) => id);
+    subject = new iiif.Processor(`${base}/10,20,30,40/pct:50/45/default.png`, ({ id }) => id);
   });
 
   it('Parse URL', () => {
@@ -40,7 +41,7 @@ describe('Include metadata', () => {
   beforeEach(() => {
     subject = new iiif.Processor(
       `${base}/10,20,30,40/pct:50/45/default.jpg`,
-      (id) => id,
+      ({ id }) => id,
       { includeMetadata: true }
     );
   });
@@ -55,7 +56,7 @@ describe('Include metadata', () => {
 
 describe('TIFF Download', () => {
   beforeEach(() => {
-    subject = new iiif.Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, (id) => id);
+    subject = new iiif.Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, ({ id }) => id);
   });
 
   it('Output TIFF format', () => {
@@ -78,7 +79,7 @@ describe('Density', () => {
     subject = (ext) => {
       return new iiif.Processor(
         `https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.${ext}`,
-        (id) => id,
+        ({ id }) => id,
         { density: 600 }
       );
     };
@@ -114,7 +115,7 @@ describe('constructor', () => {
   it('must parse the object-based constructor', () => {
     subject = new iiif.Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
-      () => 'streamResolver', 
+      () => 'streamResolver',
       { dimensionFunction: () => 'dimensionFunction', maxWidth: 'maxWidth', includeMetadata: true, density: 600 }
     );
 
@@ -154,7 +155,50 @@ describe('constructor errors', () => {
 
   it('requires a valid URL', () => {
     assert.throws(() => {
-      return new iiif.Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, (id) => id);
+      return new iiif.Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, ({ id }) => id);
     }, iiif.IIIFError);
   });
 });
+
+describe('stream processor', () => {
+  it('passes the id and baseUrl to the function', () => {
+    expect.assertions(2) // ensures our streamResolver assertions are both executed in this test
+
+    const streamResolver = ({ id, baseUrl }) => {
+      expect(id).toEqual('i');
+      expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh');
+
+      return new Stream.Readable({
+        read() {}
+      });
+    }
+
+    const subject = new iiif.Processor(`https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver);
+    subject.execute();
+  })
+})
+
+describe('dimension function', () => {
+  it('passes the id and baseUrl to the function', () => {
+    expect.assertions(2) // ensures our dimension function assertions are both executed in this test
+
+    const streamResolver = ({ id, baseUrl }) => {
+      return new Stream.Readable({
+        read() {}
+      });
+    }
+
+    const dimensionFunction = ({ id, baseUrl }) => {
+      expect(id).toEqual('i');
+      expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh');
+      return { w: 100, h: 100 }
+    }
+
+    const subject = new iiif.Processor(
+      `https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
+      streamResolver,
+      { dimensionFunction }
+    );
+    subject.execute();
+  })
+})
