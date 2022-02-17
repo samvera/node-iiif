@@ -1,5 +1,8 @@
 node_modules
+.eslintignore
 .eslintrc
 .vscode
 .codeclimate.yml
 .circleci
+tests/
+scripts/
