@@ -76,17 +76,17 @@ class Processor {
     return this;
   }
 
-  async withStream (id, callback) {
+  async withStream ({ id, baseUrl }, callback) {
     if (this.streamResolver.length === 2) {
-      return await this.streamResolver(id, callback);
+      return await this.streamResolver({ id, baseUrl }, callback);
     } else {
-      const stream = await this.streamResolver(id);
+      const stream = await this.streamResolver({ id, baseUrl });
       return await callback(stream);
     }
   }
 
-  async defaultDimensionFunction (id) {
-    return await this.withStream(id, async (stream) => {
+  async defaultDimensionFunction ({ id, baseUrl }) {
+    return await this.withStream({ id, baseUrl }, async (stream) => {
       return await probe(stream);
     });
   }
@@ -95,10 +95,10 @@ class Processor {
     const fallback = this.dimensionFunction !== this.defaultDimensionFunction;
 
     if (!this.sizeInfo) {
-      let dims = await this.dimensionFunction(this.id);
+      let dims = await this.dimensionFunction({ id: this.id, baseUrl: this.baseUrl });
       if (fallback && !dims) {
         console.warn(`Unable to get dimensions for ${this.id} using custom function. Falling back to probe().`);
-        dims = await this.defaultDimensionFunction(this.id);
+        dims = await this.defaultDimensionFunction({ id: this.id, baseUrl: this.baseUrl });
       }
       this.sizeInfo = dims;
     }
@@ -160,7 +160,7 @@ class Processor {
       const dim = await this.dimensions();
       const pipeline = this.pipeline(dim);
 
-      const result = await this.withStream(this.id, async (stream) => {
+      const result = await this.withStream({ id: this.id, baseUrl: this.baseUrl }, async (stream) => {
         return await stream.pipe(pipeline).toBuffer();
       });
       return { contentType: mime.lookup(this.format), body: result };
