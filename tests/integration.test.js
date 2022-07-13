@@ -12,13 +12,20 @@ let subject;
 let consoleWarnMock;
 
 describe('info.json', () => {
-  beforeEach(() => {
-    subject = new iiif.Processor(`${base}/info.json`, streamResolver);
-  });
-
   it('produces a valid info.json', async () => {
+    subject = new iiif.Processor(`${base}/info.json`, streamResolver, { pathPrefix: 'iiif/2/ab/cd/ef/gh' });
     const result = await subject.execute();
     const info = JSON.parse(result.body);
+    assert.strictEqual(info.profile[1].maxWidth, undefined);
+    assert.strictEqual(info.width, 621);
+    assert.strictEqual(info.height, 327);
+  });
+
+  it('respects the maxWidth option', async () => {
+    subject = new iiif.Processor(`${base}/info.json`, streamResolver, { pathPrefix: 'iiif/2/ab/cd/ef/gh', maxWidth: 600 });
+    const result = await subject.execute();
+    const info = JSON.parse(result.body);
+    assert.strictEqual(info.profile[1].maxWidth, 600);
     assert.strictEqual(info.width, 621);
     assert.strictEqual(info.height, 327);
   });
@@ -91,14 +98,35 @@ describe('IIIF transformation', () => {
       `${base}/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
       { dimensionFunction: () => null }
+      );
+    });
+    
+    afterEach(() => {
+      consoleWarnMock.mockRestore();
+    });
+    
+    it('transforms the image', async () => {
+      const result = await subject.execute();
+      const size = await probe.sync(result.body);
+      
+      assert.strictEqual(size.width, 25);
+      assert.strictEqual(size.height, 25);
+      assert.strictEqual(size.mime, 'image/png');
+    });
+  });
+  
+  describe('Two-argument streamResolver', () => {
+    beforeEach(() => {
+      subject = new iiif.Processor(
+      `${base}/10,20,30,40/pct:50/45/default.png`,
+      ({id, baseUrl}, callback) => { 
+        const stream = streamResolver({id, baseUrl});
+        return callback(stream); 
+      }
     );
   });
 
-  afterEach(() => {
-    consoleWarnMock.mockRestore();
-  });
-
-  it('transforms the image', async () => {
+  it('works with the two-argument streamResolver', async () => {
     const result = await subject.execute();
     const size = await probe.sync(result.body);
 
@@ -106,4 +134,4 @@ describe('IIIF transformation', () => {
     assert.strictEqual(size.height, 25);
     assert.strictEqual(size.mime, 'image/png');
   });
-});
+})

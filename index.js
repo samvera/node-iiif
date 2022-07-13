@@ -3,39 +3,19 @@ const mime = require('mime-types');
 const transform = require('./lib/transform');
 const IIIFError = require('./lib/error');
 
-const filenameRe = /(color|gray|bitonal|default)\.(jpe?g|tiff?|gif|png|webp)/;
-
-function parseUrl (url) {
-  const result = {};
-  const segments = url.split('/');
-  result.filename = segments.pop();
-  if (result.filename.match(filenameRe)) {
-    result.rotation = segments.pop();
-    result.size = segments.pop();
-    result.region = segments.pop();
-    result.quality = RegExp.$1;
-    result.format = RegExp.$2;
-  }
-  result.id = decodeURIComponent(segments.pop());
-  result.baseUrl = segments.join('/');
-  return result;
-}
+const DefaultPathPrefix = '/iiif/2/';
 
 class Processor {
   constructor (url, streamResolver, ...args) {
     const opts = this.parseOpts(args);
 
-    this
-      .initialize(url, streamResolver)
-      .setOpts(opts);
-
-    if (!filenameRe.test(this.filename) && this.filename !== 'info.json') {
-      throw new IIIFError(`Invalid IIIF URL: ${url}`);
-    }
-
     if (typeof streamResolver !== 'function') {
       throw new IIIFError('streamResolver option must be specified');
     }
+
+    this
+      .setOpts(opts)
+      .initialize(url, streamResolver);
   }
 
   parseOpts (args) {
@@ -59,19 +39,33 @@ class Processor {
     this.maxWidth = opts.maxWidth;
     this.includeMetadata = !!opts.includeMetadata;
     this.density = opts.density || null;
+    this.pathPrefix = opts.pathPrefix?.replace(/^\/*/, '/').replace(/\/*$/, '/') || DefaultPathPrefix;
+
     return this;
   }
 
-  initialize (url, streamResolver) {
-    let params = url;
-    if (typeof url === 'string') {
-      params = parseUrl(params);
+  parseUrl (url) {
+    const parser = new RegExp(`(?<baseUrl>https?://[^/]+${this.pathPrefix})(?<path>.+)$`);
+    const { baseUrl, path } = parser.exec(url).groups;
+    let result = transform.IIIFRegExp.exec(path)?.groups;
+    if (result === undefined) {
+      throw new IIIFError(`Invalid IIIF URL: ${url}`);
     }
+    result.baseUrl = baseUrl;
+
+    return result;
+  }
+
+  initialize (url, streamResolver) {
+    const params = this.parseUrl(url);
+
     Object.assign(this, params);
     this.streamResolver = streamResolver;
 
     if (this.quality && this.format) {
       this.filename = [this.quality, this.format].join('.');
+    } else if (this.info) {
+      this.filename = 'info.json';
     }
     return this;
   }
@@ -156,7 +150,7 @@ class Processor {
   }
 
   async iiifImage () {
-    try {
+    //try {
       const dim = await this.dimensions();
       const pipeline = this.pipeline(dim);
 
@@ -164,20 +158,16 @@ class Processor {
         return await stream.pipe(pipeline).toBuffer();
       });
       return { contentType: mime.lookup(this.format), body: result };
-    } catch (err) {
-      throw new IIIFError(`Unhandled transformation error: ${err.message}`);
-    }
+    //} catch (err) {
+    //  throw new IIIFError(`Unhandled transformation error: ${err.message}`);
+    //}
   }
 
   async execute () {
-    try {
-      if (this.filename === 'info.json') {
-        return this.infoJson();
-      } else {
-        return this.iiifImage();
-      }
-    } catch (err) {
-      console.log('Caught while executing', err.message);
+    if (this.filename === 'info.json') {
+      return await this.infoJson();
+    } else {
+      return await this.iiifImage();
     }
   }
 }

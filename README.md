@@ -28,6 +28,7 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
   * `density` (integer) – the pixel density to be included in the result image in pixels per inch
     * This has no effect whatsoever on the size of the image that gets returned; it's simply for convenience when using
       the resulting image in software that calculates a default print size based on the height, width, and density
+  * `pathPrefix` (string) – the default prefix that precedes the `id` part of the URL path (default: `/iiif/2/`)
 
 ## Examples
 
