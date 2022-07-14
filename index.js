@@ -5,6 +5,11 @@ const IIIFError = require('./lib/error');
 
 const DefaultPathPrefix = '/iiif/2/';
 
+const fixupSlashes = (path, leaveOne) => {
+  const replacement = leaveOne ? '/' : '';
+  return path?.replace(/^\/*/, replacement).replace(/\/*$/, replacement);
+};
+
 class Processor {
   constructor (url, streamResolver, ...args) {
     const opts = this.parseOpts(args);
@@ -39,7 +44,7 @@ class Processor {
     this.maxWidth = opts.maxWidth;
     this.includeMetadata = !!opts.includeMetadata;
     this.density = opts.density || null;
-    this.pathPrefix = opts.pathPrefix?.replace(/^\/*/, '/').replace(/\/*$/, '/') || DefaultPathPrefix;
+    this.pathPrefix = fixupSlashes(opts.pathPrefix, true) || DefaultPathPrefix;
 
     return this;
   }
@@ -47,7 +52,7 @@ class Processor {
   parseUrl (url) {
     const parser = new RegExp(`(?<baseUrl>https?://[^/]+${this.pathPrefix})(?<path>.+)$`);
     const { baseUrl, path } = parser.exec(url).groups;
-    let result = transform.IIIFRegExp.exec(path)?.groups;
+    const result = transform.IIIFRegExp.exec(path)?.groups;
     if (result === undefined) {
       throw new IIIFError(`Invalid IIIF URL: ${url}`);
     }
@@ -116,7 +121,7 @@ class Processor {
   infoDoc (dim, sizes) {
     return {
       '@context': 'http://iiif.io/api/image/2/context.json',
-      '@id': [this.baseUrl, encodeURIComponent(this.id)].join('/'),
+      '@id': [fixupSlashes(this.baseUrl), fixupSlashes(this.id)].join('/'),
       protocol: 'http://iiif.io/api/image',
       width: dim.width,
       height: dim.height,
@@ -150,7 +155,7 @@ class Processor {
   }
 
   async iiifImage () {
-    //try {
+    try {
       const dim = await this.dimensions();
       const pipeline = this.pipeline(dim);
 
@@ -158,9 +163,9 @@ class Processor {
         return await stream.pipe(pipeline).toBuffer();
       });
       return { contentType: mime.lookup(this.format), body: result };
-    //} catch (err) {
-    //  throw new IIIFError(`Unhandled transformation error: ${err.message}`);
-    //}
+    } catch (err) {
+      throw new IIIFError(`Unhandled transformation error: ${err.message}`);
+    }
   }
 
   async execute () {

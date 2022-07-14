@@ -16,6 +16,7 @@ describe('info.json', () => {
     subject = new iiif.Processor(`${base}/info.json`, streamResolver, { pathPrefix: 'iiif/2/ab/cd/ef/gh' });
     const result = await subject.execute();
     const info = JSON.parse(result.body);
+    assert.strictEqual(info['@id'], 'https://example.org/iiif/2/ab/cd/ef/gh/i');
     assert.strictEqual(info.profile[1].maxWidth, undefined);
     assert.strictEqual(info.width, 621);
     assert.strictEqual(info.height, 327);
