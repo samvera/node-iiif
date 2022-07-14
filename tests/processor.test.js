@@ -14,6 +14,8 @@ describe('IIIF Processor', () => {
   });
 
   it('Parse URL', () => {
+    assert.strictEqual(subject.id, 'ab/cd/ef/gh/i');
+    assert.strictEqual(subject.baseUrl, 'https://example.org/iiif/2/');
     assert.strictEqual(subject.rotation, '45');
     assert.strictEqual(subject.size, 'pct:50');
     assert.strictEqual(subject.region, '10,20,30,40');
@@ -166,14 +168,14 @@ describe('stream processor', () => {
 
     const streamResolver = ({ id, baseUrl }) => {
       expect(id).toEqual('i');
-      expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh');
+      expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh/');
 
       return new Stream.Readable({
         read() {}
       });
     }
 
-    const subject = new iiif.Processor(`https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver);
+    const subject = new iiif.Processor(`https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: 'iiif/2/ab/cd/ef/gh'});
     subject.execute();
   })
 })
@@ -190,14 +192,14 @@ describe('dimension function', () => {
 
     const dimensionFunction = ({ id, baseUrl }) => {
       expect(id).toEqual('i');
-      expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh');
+      expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh/');
       return { w: 100, h: 100 }
     }
 
     const subject = new iiif.Processor(
       `https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
-      { dimensionFunction }
+      { dimensionFunction, pathPrefix: 'iiif/2/ab/cd/ef/gh' }
     );
     subject.execute();
   })

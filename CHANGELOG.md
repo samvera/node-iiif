@@ -2,6 +2,10 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v3.0.0
+
+- Add `pathPrefix` option (default: `/iiif/2/`) to constructor instead of popping a specific number of path segments off of the end of the URL
+
 ##### v2.0.0
 
 - Pass `baseUrl` to `streamResolver` and `dimension` functions
