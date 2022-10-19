@@ -1,12 +1,15 @@
 ---
 version: 2.1
+orbs:
+  node: circleci/node@5
 jobs:
   build:
     working_directory: ~/iiif-processor
     docker:
-      - image: circleci/node:14
+      - image: cimg/base:stable
     steps:
       - checkout
+      - node/install
       - run:
           name: Check for 'master' branch
           command: |
