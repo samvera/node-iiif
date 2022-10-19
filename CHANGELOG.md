@@ -2,6 +2,10 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v3.1.0
+
+- Support dimension probing for JPEG 2000 images
+
 ##### v3.0.0
 
 - Add `pathPrefix` option (default: `/iiif/2/`) to constructor instead of popping a specific number of path segments off of the end of the URL
