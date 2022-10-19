@@ -20,7 +20,7 @@
   ],
   "dependencies": {
     "mime-types": "2.x",
-    "probe-image-size": "4.x",
+    "probe-image-size": "github:notch8/probe-image-size#master",
     "sharp": ">=0.25.2 <1.0.0"
   },
   "devDependencies": {
