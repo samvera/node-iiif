@@ -1,8 +1,8 @@
 # iiif-processor
 
-[![Build Status](https://circleci.com/gh/samvera-labs/node-iiif.svg?style=svg)](https://circleci.com/gh/samvera-labs/node-iiif)
-[![Maintainability](https://api.codeclimate.com/v1/badges/1f771d90d694b2798fb5/maintainability)](https://codeclimate.com/github/samvera-labs/node-iiif/maintainability)
-[![Test Coverage](https://coveralls.io/repos/github/samvera-labs/node-iiif/badge.svg)](https://coveralls.io/github/samvera-labs/node-iiif)
+[![Build Status](https://circleci.com/gh/samvera/node-iiif.svg?style=svg)](https://circleci.com/gh/samvera/node-iiif)
+[![Maintainability](https://api.codeclimate.com/v1/badges/1f771d90d694b2798fb5/maintainability)](https://codeclimate.com/github/samvera/node-iiif/maintainability)
+[![Test Coverage](https://coveralls.io/repos/github/samvera/node-iiif/badge.svg)](https://coveralls.io/github/samvera/node-iiif)
 
 This module provides a full-featured [IIIF Image API 2.1](https://iiif.io/api/image/2.1/) image processor. It covers only the image processing pipeline itself, leaving input and output to the caller.
 
@@ -141,7 +141,7 @@ The `id` parameter is `42562145-0998-4b67-bab0-6028328f8319.png` and the `baseUr
   dimensionFunction({ id }) { }        // new
   ```
 
-  See [issue #19](https://github.com/samvera-labs/node-iiif/issues/19) for context on why this change was made.
+  See [issue #19](https://github.com/samvera/node-iiif/issues/19) for context on why this change was made.
 
 ### Contributing
 
