@@ -1,7 +1,7 @@
 # iiif-processor
 
 [![Build Status](https://circleci.com/gh/samvera/node-iiif.svg?style=svg)](https://circleci.com/gh/samvera/node-iiif)
-[![Maintainability](https://api.codeclimate.com/v1/badges/1f771d90d694b2798fb5/maintainability)](https://codeclimate.com/github/samvera/node-iiif/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/b5da41e405f8c020c273/maintainability)](https://codeclimate.com/github/samvera/node-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/node-iiif/badge.svg)](https://coveralls.io/github/samvera/node-iiif)
 
 This module provides a full-featured [IIIF Image API 2.1](https://iiif.io/api/image/2.1/) image processor. It covers only the image processing pipeline itself, leaving input and output to the caller.
