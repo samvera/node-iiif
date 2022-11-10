@@ -32,6 +32,10 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
 
 ## Examples
 
+### Full Self-Contained Application
+
+See the [TinyIIIF](./examples/tiny-iiif/README.md) example.
+
 ### Stream Resolver
 
 The calling function must supply the processor with a Stream Resolver callback
