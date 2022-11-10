@@ -8,7 +8,7 @@ TinyIIIF is a small [tinyhttp](https://tinyhttp.v1rtl.site) implementation of a 
 
 ```shell
 $ IIIF_IMAGE_PATH=/path/to/iiif/images node index.js
-Serving IIIF images from /Users/mbk836/Workspace/repos/nulib/iiif-express on http://localhost:3000
+Serving IIIF images from /path/to/iiif/images on http://localhost:3000
 ```
 
 ### Environment Variables
@@ -21,12 +21,12 @@ Serving IIIF images from /Users/mbk836/Workspace/repos/nulib/iiif-express on htt
 
 ```
 $ docker build -t tiny-iiif .
-$ docker run -v /path/to/iiif/images:/data --publish 3000:3000 tiny-iiif
+$ docker run --rm -ti -v /path/to/iiif/images:/data --publish 3000:3000 tiny-iiif
 ```
 
 The `IMAGE_FILE_TEMPLATE` can be specified by using Docker's `-e` (or `--env`) parameter:
 ```
-$ docker run -e IMAGE_FILE_TEMPLATE={{id}}.jpg -v /path/to/iiif/images:/data -p 3000:3000 tiny-iiif
+$ docker run --rm -ti -e IMAGE_FILE_TEMPLATE={{id}}.jpg -v /path/to/iiif/images:/data -p 3000:3000 tiny-iiif
 ```
 
 ### Docker Compose Example
