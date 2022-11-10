@@ -155,17 +155,13 @@ class Processor {
   }
 
   async iiifImage () {
-    try {
-      const dim = await this.dimensions();
-      const pipeline = this.pipeline(dim);
+    const dim = await this.dimensions();
+    const pipeline = this.pipeline(dim);
 
-      const result = await this.withStream({ id: this.id, baseUrl: this.baseUrl }, async (stream) => {
-        return await stream.pipe(pipeline).toBuffer();
-      });
-      return { contentType: mime.lookup(this.format), body: result };
-    } catch (err) {
-      throw new IIIFError(`Unhandled transformation error: ${err.message}`);
-    }
+    const result = await this.withStream({ id: this.id, baseUrl: this.baseUrl }, async (stream) => {
+      return await stream.pipe(pipeline).toBuffer();
+    });
+    return { contentType: mime.lookup(this.format), body: result };
   }
 
   async execute () {

@@ -5,7 +5,7 @@ import { logger } from '@tinyhttp/logger';
 import { port, iiifImagePath } from './config.js';
 import iiif2 from './iiif2.js';
 
-const app = new App();
+const app = new App({ settings: { networkExtensions: true } });
 
 app
   .use(logger())

@@ -1,5 +1,5 @@
 import { App } from '@tinyhttp/app';
-import IIIF from 'iiif-processor';
+import IIIF, { IIIFError } from 'iiif-processor';
 import fs from 'fs';
 import path from 'path';
 import { iiifImagePath, fileTemplate } from './config.js'
@@ -7,28 +7,28 @@ import { iiifImagePath, fileTemplate } from './config.js'
 function streamImageFromFile ({ id }) {
   const filename = fileTemplate.replace(/\{\{id\}\}/, id);
   const file = path.join(iiifImagePath, filename);
+  if (!fs.existsSync(file)) {
+    throw new IIIFError('Not Found', { statusCode: 404 });
+  };
   return fs.createReadStream(file);
 }
 
-function render (req, res) {
+async function render (req, res) {
   if (!req.params?.filename == null) {
     req.params.filename = 'info.json';
   }
 
-  const iiifUrl = `http://${req.get('host')}${req.path}`;
-  const iiifProcessor = new IIIF.Processor(iiifUrl, streamImageFromFile);
-  iiifProcessor
-    .execute()
-    .then((result) => {
-      res
-        .set('Content-Type', result.contentType)
-        .status(200)
-        .send(result.body);
-    })
-    .catch((err) => {
-      const statusCode = err.statusCode || 502;
-      res.status(statusCode).send(err.message + '\n' + err.stack);
-    });
+  try {
+    const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
+    const iiifProcessor = new IIIF.Processor(iiifUrl, streamImageFromFile);
+    const result = await iiifProcessor.execute();
+    return res.set('Content-Type', result.contentType)
+      .status(200)
+      .send(result.body);
+  } catch (err) {
+    const statusCode = err.statusCode || 502;
+    return res.status(statusCode).send(err.message);
+  }
 };
 
 const router = new App();

@@ -42,6 +42,6 @@ services:
       - "3000:3000"
     volumes:
       - "/path/to/iiif/images:/data"
-    env:
+    environment:
       IMAGE_FILE_TEMPLATE: "{{id}}.pyramid.tif"
 ```
