@@ -1,3 +1,4 @@
+coverage/
 node_modules
 .eslintignore
 .eslintrc
@@ -6,3 +7,4 @@ node_modules
 .circleci
 tests/
 scripts/
+examples/
