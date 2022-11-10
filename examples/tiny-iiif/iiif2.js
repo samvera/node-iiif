@@ -2,7 +2,7 @@ import { App } from '@tinyhttp/app';
 import IIIF, { IIIFError } from 'iiif-processor';
 import fs from 'fs';
 import path from 'path';
-import { iiifImagePath, fileTemplate } from './config.js'
+import { iiifImagePath, fileTemplate } from './config.js';
 
 function streamImageFromFile ({ id }) {
   const filename = fileTemplate.replace(/\{\{id\}\}/, id);
