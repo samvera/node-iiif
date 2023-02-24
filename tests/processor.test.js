@@ -6,7 +6,7 @@ const iiif = require('../index');
 
 let subject;
 const base = 'https://example.org/iiif/2/ab/cd/ef/gh/i';
-const dims = { width: 1024, height: 768 };
+const dims = [{ width: 1024, height: 768 }];
 
 describe('IIIF Processor', () => {
   beforeEach(() => {
@@ -23,8 +23,8 @@ describe('IIIF Processor', () => {
     assert.strictEqual(subject.format, 'png');
   });
 
-  it('Create pipeline', () => {
-    const pipe = subject.pipeline(dims);
+  it('Create pipeline', async () => {
+    const pipe = await subject.pipeline(dims);
     const opts = pipe.options;
 
     assert.strictEqual(opts.width, 15);
@@ -48,8 +48,8 @@ describe('Include metadata', () => {
     );
   });
 
-  it('Includes preexisting metadata', () => {
-    const pipe = subject.pipeline(dims);
+  it('Includes preexisting metadata', async () => {
+    const pipe = await subject.pipeline(dims);
     const opts = pipe.options;
 
     assert.strictEqual(opts.withMetadata, true);
@@ -61,8 +61,8 @@ describe('TIFF Download', () => {
     subject = new iiif.Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, ({ id }) => id);
   });
 
-  it('Output TIFF format', () => {
-    const pipe = subject.pipeline(dims);
+  it('Output TIFF format', async () => {
+    const pipe = await subject.pipeline(dims);
     const opts = pipe.options;
 
     assert.strictEqual(opts.width, 15);
@@ -87,26 +87,26 @@ describe('Density', () => {
     };
   });
 
-  it('Adds density to TIFF', () => {
+  it('Adds density to TIFF', async () => {
     const processor = subject('tif');
-    const pipe = processor.pipeline(dims);
+    const pipe = await processor.pipeline(dims);
     const opts = pipe.options;
 
     assert.strictEqual(opts.tiffXres, 600 / 25.4);
     assert.strictEqual(opts.tiffYres, 600 / 25.4);
   });
 
-  it('Adds density to JPEG', () => {
+  it('Adds density to JPEG', async () => {
     const processor = subject('jpg');
-    const pipe = processor.pipeline(dims);
+    const pipe = await processor.pipeline(dims);
     const opts = pipe.options;
 
     assert.strictEqual(opts.withMetadataDensity, 600);
   });
 
-  it('Adds density to PNG', () => {
+  it('Adds density to PNG', async () => {
     const processor = subject('png');
-    const pipe = processor.pipeline(dims);
+    const pipe = await processor.pipeline(dims);
     const opts = pipe.options;
 
     assert.strictEqual(opts.withMetadataDensity, 600);

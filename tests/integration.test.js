@@ -3,7 +3,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const iiif = require('../index');
-const probe = require('probe-image-size');
+const Sharp = require('sharp');
 const { qualities, formats, regions, sizes, rotations } = require('./fixtures/iiif-values');
 
 const base = 'https://example.org/iiif/2/ab/cd/ef/gh/i';
@@ -80,6 +80,13 @@ describe('size', () => {
     subject = new iiif.Processor(`${base}/full/pct:0/0/default.png`, streamResolver);
     assert.rejects(() => subject.execute(), iiif.IIIFError);
   });
+
+  it('should select the correct page for the size', async () => {
+    let pipeline;
+    subject = new iiif.Processor(`${base}/full/pct:40/0/default.png`, streamResolver);
+    pipeline = await subject.pipeline(await subject.dimensions());
+    assert.strictEqual(pipeline.options.input.page, 1);
+  });
 });
 
 describe('rotation', () => {
@@ -99,26 +106,26 @@ describe('IIIF transformation', () => {
       `${base}/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
       { dimensionFunction: () => null }
-      );
-    });
-    
-    afterEach(() => {
-      consoleWarnMock.mockRestore();
-    });
-    
-    it('transforms the image', async () => {
-      const result = await subject.execute();
-      const size = await probe.sync(result.body);
-      
-      assert.strictEqual(size.width, 25);
-      assert.strictEqual(size.height, 25);
-      assert.strictEqual(size.mime, 'image/png');
-    });
+    );
   });
+    
+  afterEach(() => {
+    consoleWarnMock.mockRestore();
+  });
+    
+  it('transforms the image', async () => {
+    const result = await subject.execute();
+    const size = await Sharp(result.body).metadata();
+    
+    assert.strictEqual(size.width, 25);
+    assert.strictEqual(size.height, 25);
+    assert.strictEqual(size.format, 'png');
+  });
+});
   
-  describe('Two-argument streamResolver', () => {
-    beforeEach(() => {
-      subject = new iiif.Processor(
+describe('Two-argument streamResolver', () => {
+  beforeEach(() => {
+    subject = new iiif.Processor(
       `${base}/10,20,30,40/pct:50/45/default.png`,
       ({id, baseUrl}, callback) => { 
         const stream = streamResolver({id, baseUrl});
@@ -129,10 +136,10 @@ describe('IIIF transformation', () => {
 
   it('works with the two-argument streamResolver', async () => {
     const result = await subject.execute();
-    const size = await probe.sync(result.body);
+    const size = await Sharp(result.body).metadata();
 
     assert.strictEqual(size.width, 25);
     assert.strictEqual(size.height, 25);
-    assert.strictEqual(size.mime, 'image/png');
+    assert.strictEqual(size.format, 'png');
   });
 })

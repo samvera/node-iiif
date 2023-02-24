@@ -1,16 +1,33 @@
 'use strict';
 
 const assert = require('assert');
-const Transform = require('../lib/transform');
+const { Calculator, pathToIiif } = require('../lib/calculator');
 const IIIFError = require('../lib/error');
 
 const { qualities, formats, regions, sizes, rotations } = require('./fixtures/iiif-values');
 
 let subject;
 
-describe('transformer', () => {
+describe('pathToIiif', () => {
+  it('properly parses a IIIF path', () => {
+    const { id, region, size, rotation, quality, format } = pathToIiif('/abc-123/500,500,256,256/pct:75/45/bitonal.png');
+    assert.equal(id, 'abc-123');
+    assert.equal(region, '500,500,256,256');
+    assert.equal(size, 'pct:75');
+    assert.equal(rotation, '45');
+    assert.equal(quality, 'bitonal');
+    assert.equal(format, 'png');
+  });
+
+  it('throws a IIIFError when an invalid path is passed', () => {
+    ['', '/abc-123/blergh/full/0/default.jpg', '/abc-123/full/50/0/default.jpg']
+    .forEach((value) => assert.throws(() => pathToIiif(value)));
+  });
+});
+
+describe('Calculator', () => {
   beforeEach(() => {
-    subject = new Transform.Operations({ width: 1024, height: 768 });
+    subject = new Calculator({ width: 1024, height: 768 });
   });
 
   it('quality', () => {
@@ -33,7 +50,7 @@ describe('transformer', () => {
     assert.throws(() => subject.region('10,10,0,10'), IIIFError);
     assert.throws(() => subject.region('pct:10,10,0,0'), IIIFError);
 
-    subject = new Transform.Operations({ width: 768, height: 1024 });
+    subject = new Calculator({ width: 768, height: 1024 });
     assert.doesNotThrow(() => subject.region('square'), IIIFError);
   });
 
@@ -52,5 +69,19 @@ describe('transformer', () => {
   it('rotation', () => {
     rotations.forEach((value) => assert.doesNotThrow(() => subject.rotation(value), IIIFError));
     assert.throws(() => subject.rotation('badValue'), IIIFError);
+  });
+
+  it('info', () => {
+    const expected = {
+      region: { left: 512, top: 384, width: 256, height: 192 },
+      size: { fit: 'cover', width: 512, height: 384 },
+      rotation: { flop: false, degree: 45 },
+      quality: 'default',
+      format: { type: 'jpg', density: 600 },
+      fullSize: { width: 2048, height: 1536 },
+    };
+
+    subject.region("pct:50,50,25,25").size("512,384").rotation("45").quality("default").format("jpg", 600);
+    assert.deepEqual(subject.info(), expected);
   });
 });

@@ -1,7 +1,37 @@
-const probe = require('probe-image-size');
+const debug = require('debug')('iiif-processor:main');
 const mime = require('mime-types');
-const transform = require('./lib/transform');
+const sharp = require('sharp');
+const { Formats, Qualities, Operations, pathToIiif } = require('./lib/transform');
 const IIIFError = require('./lib/error');
+const IIIFProfile = [
+  'http://iiif.io/api/image/2/level2.json',
+  {
+    formats: Formats,
+    qualities: Qualities,
+    supports: [
+      'regionByPx',
+      'sizeByW',
+      'sizeByWhListed',
+      'cors',
+      'regionSquare',
+      'sizeByDistortedWh',
+      'sizeAboveFull',
+      'canonicalLinkHeader',
+      'sizeByConfinedWh',
+      'sizeByPct',
+      'jsonldMediaType',
+      'regionByPct',
+      'rotationArbitrary',
+      'sizeByH',
+      'baseUriRedirect',
+      'rotationBy90s',
+      'profileLinkHeader',
+      'sizeByForcedWh',
+      'sizeByWh',
+      'mirroring'
+    ]
+  }
+];
 
 const DefaultPathPrefix = '/iiif/2/';
 
@@ -52,10 +82,7 @@ class Processor {
   parseUrl (url) {
     const parser = new RegExp(`(?<baseUrl>https?://[^/]+${this.pathPrefix})(?<path>.+)$`);
     const { baseUrl, path } = parser.exec(url).groups;
-    const result = transform.IIIFRegExp.exec(path)?.groups;
-    if (result === undefined) {
-      throw new IIIFError(`Invalid IIIF URL: ${url}`);
-    }
+    const result = pathToIiif(path);
     result.baseUrl = baseUrl;
 
     return result;
@@ -63,7 +90,7 @@ class Processor {
 
   initialize (url, streamResolver) {
     const params = this.parseUrl(url);
-
+    debug('Parsed URL: %j', params);
     Object.assign(this, params);
     this.streamResolver = streamResolver;
 
@@ -76,6 +103,7 @@ class Processor {
   }
 
   async withStream ({ id, baseUrl }, callback) {
+    debug('Requesting stream for %s', id);
     if (this.streamResolver.length === 2) {
       return await this.streamResolver({ id, baseUrl }, callback);
     } else {
@@ -85,8 +113,19 @@ class Processor {
   }
 
   async defaultDimensionFunction ({ id, baseUrl }) {
+    const result = [];
+    let page = 0;
+    const target = sharp({ page });
+
     return await this.withStream({ id, baseUrl }, async (stream) => {
-      return await probe(stream);
+      stream.pipe(target);
+      const { width, height, pages } = await target.metadata();
+      result.push({ width, height });
+      for (page += 1; page < pages; page++) {
+        const scale = 1 / 2 ** page;
+        result.push({ width: Math.floor(width * scale), height: Math.floor(height * scale) });
+      }
+      return result;
     });
   }
 
@@ -94,18 +133,24 @@ class Processor {
     const fallback = this.dimensionFunction !== this.defaultDimensionFunction;
 
     if (!this.sizeInfo) {
-      let dims = await this.dimensionFunction({ id: this.id, baseUrl: this.baseUrl });
+      debug('Attempting to use dimensionFunction to retrieve dimensions for %j', this.id);
+      const params = { id: this.id, baseUrl: this.baseUrl };
+      let dims = await this.dimensionFunction(params);
       if (fallback && !dims) {
-        console.warn(`Unable to get dimensions for ${this.id} using custom function. Falling back to probe().`);
-        dims = await this.defaultDimensionFunction({ id: this.id, baseUrl: this.baseUrl });
+        const warning =
+          'Unable to get dimensions for %s using custom function. Falling back to sharp.metadata().';
+        debug(warning, this.id);
+        console.warn(warning, this.id);
+        dims = await this.defaultDimensionFunction(params);
       }
+      if (!Array.isArray(dims)) dims = [dims];
       this.sizeInfo = dims;
     }
     return this.sizeInfo;
   }
 
   async infoJson () {
-    const dim = await this.dimensions();
+    const [dim] = await this.dimensions();
     const sizes = [];
     for (let size = [dim.width, dim.height]; size.every((x) => x >= 64); size = size.map((x) => Math.floor(x / 2))) {
       sizes.push({ width: size[0], height: size[1] });
@@ -125,42 +170,34 @@ class Processor {
       protocol: 'http://iiif.io/api/image',
       width: dim.width,
       height: dim.height,
-      sizes: sizes,
-      tiles: [
-        {
-          width: 512,
-          height: 512,
-          scaleFactors: sizes.map((_v, i) => 2 ** i)
-        }
-      ],
-      profile: [
-        'http://iiif.io/api/image/2/level2.json',
-        {
-          formats: transform.Formats,
-          qualities: transform.Qualities,
-          supports: ['regionByPx', 'sizeByW', 'sizeByWhListed', 'cors', 'regionSquare', 'sizeByDistortedWh', 'sizeAboveFull', 'canonicalLinkHeader', 'sizeByConfinedWh', 'sizeByPct', 'jsonldMediaType', 'regionByPct', 'rotationArbitrary', 'sizeByH', 'baseUriRedirect', 'rotationBy90s', 'profileLinkHeader', 'sizeByForcedWh', 'sizeByWh', 'mirroring']
-        }
-      ]
+      sizes,
+      tiles: [{ width: 512, height: 512, scaleFactors: sizes.map((_v, i) => 2 ** i) }],
+      profile: IIIFProfile
     };
   }
 
-  pipeline (dim) {
-    return new transform.Operations(dim)
+  async pipeline (dim) {
+    return new Operations(dim)
       .region(this.region)
       .size(this.size)
       .rotation(this.rotation)
       .quality(this.quality)
       .format(this.format, this.density)
-      .withMetadata(this.includeMetadata).pipeline;
+      .withMetadata(this.includeMetadata)
+      .pipeline();
   }
 
   async iiifImage () {
     const dim = await this.dimensions();
-    const pipeline = this.pipeline(dim);
+    const pipeline = await this.pipeline(dim);
 
     const result = await this.withStream({ id: this.id, baseUrl: this.baseUrl }, async (stream) => {
-      return await stream.pipe(pipeline).toBuffer();
+      debug('piping stream to pipeline');
+      const transformed = await stream.pipe(pipeline);
+      debug('converting to buffer');
+      return await transformed.toBuffer();
     });
+    debug('returning %d bytes', result.length);
     return { contentType: mime.lookup(this.format), body: result };
   }
 
