@@ -1,3 +1,4 @@
+const debug = require('debug')('iiif-processor:main');
 const probe = require('probe-image-size');
 const mime = require('mime-types');
 const transform = require('./lib/transform');
@@ -63,7 +64,7 @@ class Processor {
 
   initialize (url, streamResolver) {
     const params = this.parseUrl(url);
-
+    debug('Parsed URL: %j', params);
     Object.assign(this, params);
     this.streamResolver = streamResolver;
 
@@ -76,6 +77,7 @@ class Processor {
   }
 
   async withStream ({ id, baseUrl }, callback) {
+    debug('Requesting stream for %s', id);
     if (this.streamResolver.length === 2) {
       return await this.streamResolver({ id, baseUrl }, callback);
     } else {
@@ -94,13 +96,17 @@ class Processor {
     const fallback = this.dimensionFunction !== this.defaultDimensionFunction;
 
     if (!this.sizeInfo) {
+      debug('Attempting to use dimensionFunction to retrieve dimensions for %j', this.id);
       let dims = await this.dimensionFunction({ id: this.id, baseUrl: this.baseUrl });
       if (fallback && !dims) {
-        console.warn(`Unable to get dimensions for ${this.id} using custom function. Falling back to probe().`);
+        const warning = 'Unable to get dimensions for %s using custom function. Falling back to probe().';
+        debug(warning, this.id);
+        console.warn(warning, this.id);
         dims = await this.defaultDimensionFunction({ id: this.id, baseUrl: this.baseUrl });
       }
       this.sizeInfo = dims;
     }
+    debug('Dimensions for %s = %j', this.id, this.sizeInfo);
     return this.sizeInfo;
   }
 
@@ -159,8 +165,12 @@ class Processor {
     const pipeline = this.pipeline(dim);
 
     const result = await this.withStream({ id: this.id, baseUrl: this.baseUrl }, async (stream) => {
-      return await stream.pipe(pipeline).toBuffer();
+      debug('piping stream to pipeline');
+      const transformed = await stream.pipe(pipeline);
+      debug('converting to buffer');
+      return await transformed.toBuffer();
     });
+    debug('returning %d bytes', result.length);
     return { contentType: mime.lookup(this.format), body: result };
   }
 

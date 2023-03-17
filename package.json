@@ -1,6 +1,6 @@
 {
   "name": "iiif-processor",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "description": "IIIF 2.1 Image API modules for NodeJS",
   "main": "index.js",
   "repository": "https://github.com/samvera/node-iiif",
@@ -19,6 +19,7 @@
     "vips"
   ],
   "dependencies": {
+    "debug": "^4.3.4",
     "mime-types": "2.x",
     "probe-image-size": "github:notch8/probe-image-size#master",
     "sharp": ">=0.25.2 <1.0.0"

@@ -30,6 +30,9 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
       the resulting image in software that calculates a default print size based on the height, width, and density
   * `pathPrefix` (string) – the default prefix that precedes the `id` part of the URL path (default: `/iiif/2/`)
 
+### Environment
+If the environment variable `SHARP_OPTIONS` is defined, it will be parsed as JSON and applied to the [constructor](https://sharp.pixelplumbing.com/api-constructor) of the `sharp` image processor.
+
 ## Examples
 
 ### Full Self-Contained Application
@@ -126,9 +129,9 @@ For instance, for the request:
 
 The `id` parameter is `42562145-0998-4b67-bab0-6028328f8319.png` and the `baseUrl` is `https://example.org/iiif/assets`.
 
-### Breaking Changes
+## Breaking Changes
 
-#### v1 -> v2
+### v1 -> v2
 
 * The `id` parameter passed to the [stream resolver](#stream-resolver) and [dimensions callback](#dimension-function) was
   changed from a `string` to an `object` containing the `id` and `baseUrl`.
@@ -147,14 +150,16 @@ The `id` parameter is `42562145-0998-4b67-bab0-6028328f8319.png` and the `baseUr
 
   See [issue #19](https://github.com/samvera/node-iiif/issues/19) for context on why this change was made.
 
-### Contributing
+## Contributing
 
 Contributions are welcome in the form of bug reports, suggestions, pull requests, and/or documentation.
 
 If you're working on a PR for this project, create a feature branch off of `main`.
 
+This project uses the [debug](https://www.npmjs.com/package/debug) library for selective debugging output. To view all IIIF-related debug messages, set the environment variable `DEBUG=iiif-processor:*`. To view just the main or transformer contexts, set `DEBUG=iiif-processor:main` or `DEBUG=iiif-processor:transform`.
+
 This repository follows the [Samvera Community Code of Conduct](https://samvera.atlassian.net/wiki/spaces/samvera/pages/405212316/Code+of+Conduct) and [language recommendations](https://github.com/samvera/maintenance/blob/main/templates/CONTRIBUTING.md#language).  Please ***do not*** create a branch called `master` for this repository or as part of your pull request; the branch will either need to be removed or renamed before it can be considered for inclusion in the code base and history of this repository.
 
-### License
+## License
 
 `node-iiif` is available under [the Apache 2.0 license](LICENSE).

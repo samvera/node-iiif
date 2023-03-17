@@ -8,6 +8,35 @@ const { qualities, formats, regions, sizes, rotations } = require('./fixtures/ii
 
 let subject;
 
+describe('environment options', () => {
+  afterEach(() => {
+    delete process.env.SHARP_OPTIONS;
+  });
+
+  it('uses the correct defaults', () => {
+    subject = new Transform.Operations({ width: 1024, height: 768 });
+    assert.equal(subject.pipeline.options.input.limitInputPixels, 0);
+    assert.equal(subject.pipeline.options.input.sequentialRead, false);
+    assert.equal(subject.pipeline.options.input.unlimited, false);
+  });
+
+  it("correctly reads SHARP_OPTIONS", () => {
+    process.env.SHARP_OPTIONS = '{"sequentialRead":true}';
+    subject = new Transform.Operations({ width: 1024, height: 768 });
+    assert.equal(subject.pipeline.options.input.limitInputPixels, 0);
+    assert.equal(subject.pipeline.options.input.sequentialRead, true);
+    assert.equal(subject.pipeline.options.input.unlimited, false);
+  });
+
+  it("ignores bad JSON", () => {
+    process.env.SHARP_OPTIONS = '{ this is not json';
+    subject = new Transform.Operations({ width: 1024, height: 768 });
+    assert.equal(subject.pipeline.options.input.limitInputPixels, 0);
+    assert.equal(subject.pipeline.options.input.sequentialRead, false);
+    assert.equal(subject.pipeline.options.input.unlimited, false);
+  });
+});
+
 describe('transformer', () => {
   beforeEach(() => {
     subject = new Transform.Operations({ width: 1024, height: 768 });
