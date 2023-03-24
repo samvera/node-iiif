@@ -146,6 +146,25 @@ describe('constructor', () => {
     assert.strictEqual(subject.includeMetadata, true);
     assert.strictEqual(subject.density, null);
   });
+
+  it('properly handles custom sharp options', async () => {
+    let pipe;
+    
+    subject = new iiif.Processor(
+      `${base}/10,20,30,40/pct:50/45/default.tif`,
+      () => 'streamResolver'
+    );
+    pipe = await subject.pipeline(dims);
+    assert.strictEqual(pipe.options.input.sequentialRead, false);
+    
+    subject = new iiif.Processor(
+      `${base}/10,20,30,40/pct:50/45/default.tif`,
+      () => 'streamResolver',
+      { sharpOptions: { sequentialRead: true } }
+    );
+    pipe = await subject.pipeline(dims);
+    assert.strictEqual(pipe.options.input.sequentialRead, true);
+  })
 });
 
 describe('constructor errors', () => {

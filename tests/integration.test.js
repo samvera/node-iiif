@@ -142,4 +142,4 @@ describe('Two-argument streamResolver', () => {
     assert.strictEqual(size.height, 25);
     assert.strictEqual(size.format, 'png');
   });
-})
+});

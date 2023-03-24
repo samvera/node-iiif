@@ -75,6 +75,7 @@ class Processor {
     this.includeMetadata = !!opts.includeMetadata;
     this.density = opts.density || null;
     this.pathPrefix = fixupSlashes(opts.pathPrefix, true) || DefaultPathPrefix;
+    this.sharpOptions = opts.sharpOptions || {};
 
     return this;
   }
@@ -177,7 +178,7 @@ class Processor {
   }
 
   async pipeline (dim) {
-    return new Operations(dim)
+    return new Operations(dim, this.sharpOptions)
       .region(this.region)
       .size(this.size)
       .rotation(this.rotation)
