@@ -2,6 +2,12 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v3.2.0
+- Major refactor to support multi-resolution source images
+- Backward-compatible overhaul of `dimensionFunction`
+- Split `Calculator` out from `Operations` to make certain pre-transform information available with low overhead
+- Use `sharp.metadata()` instead of `probe-image-size` in default dimension function
+
 ##### v3.1.0
 
 - Support dimension probing for JPEG 2000 images
