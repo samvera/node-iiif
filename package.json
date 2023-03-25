@@ -1,11 +1,20 @@
 {
   "name": "iiif-processor",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "description": "IIIF 2.1 Image API modules for NodeJS",
   "main": "index.js",
   "repository": "https://github.com/samvera/node-iiif",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
+  "files": [
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "lib/**/*.js",
+    "index.js",
+    "LICENSE",
+    "package.json",
+    "README.md"
+  ],
   "scripts": {
     "clean": "rm -rf node_modules/ vendor/ coverage/",
     "lint": "eslint index.js lib/*.js",
