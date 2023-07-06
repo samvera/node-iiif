@@ -4,7 +4,8 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/b5da41e405f8c020c273/maintainability)](https://codeclimate.com/github/samvera/node-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/node-iiif/badge.svg)](https://coveralls.io/github/samvera/node-iiif)
 
-This module provides a full-featured [IIIF Image API 2.1](https://iiif.io/api/image/2.1/) image processor. It covers only the image processing pipeline itself, leaving input and output to the caller.
+This module provides a full-featured image processor supporting the IIIF Image API versions [2.1](https://iiif.io/api/image/2.1/) and 
+[3.0](https://iiif.io/api/image/3.0/). It covers only the image processing pipeline itself, leaving input and output to the caller.
 
 ## Install with NPM
 
@@ -17,13 +18,18 @@ npm install iiif-processor --save
 ```javascript
 const IIIF = require('iiif-processor');
 
-const processor = new IIIF.Processor(url, streamResolver, opts);
+const processor = new IIIF.Processor(version, url, streamResolver, opts);
 ```
 
+* `version` (number, required) – the version of the IIIF spec to use (`2` or `3`)
+* `url` (string, required) - the URL of the IIIF resource to process
 * `streamResolver` (function, required) – a callback function that returns a readable image stream for a given request ([see below](#stream-resolver))
 * `opts`:
   * `dimensionFunction` (function) – a callback function that returns the image dimensions for a given request ([see below](#dimension-function))
-  * `maxWidth` (integer) – the maximum width of an image that can be returned
+  * `max` (object) – optional maximum size constraints of an image that can be returned
+    * `width` (integer) - the maximum pixel width of the returned image
+    * `height` (integer) - the maximum pixel height of the returned image
+    * `area` (integer) - the maximum total number of pixels in the returned image
   * `includeMetadata` (boolean) – if `true`, all metadata from the source image will be copied to the result
   * `density` (integer) – the pixel density to be included in the result image in pixels per inch
     * This has no effect whatsoever on the size of the image that gets returned; it's simply for convenience when using
@@ -140,27 +146,6 @@ For instance, for the request:
 > https://example.org/iiif/assets/42562145-0998-4b67-bab0-6028328f8319.png/10,20,30,40/pct:50/45/default.png
 
 The `id` parameter is `42562145-0998-4b67-bab0-6028328f8319.png` and the `baseUrl` is `https://example.org/iiif/assets`.
-
-## Breaking Changes
-
-### v1 -> v2
-
-* The `id` parameter passed to the [stream resolver](#stream-resolver) and [dimensions callback](#dimension-function) was
-  changed from a `string` to an `object` containing the `id` and `baseUrl`.
-
-  To maintain the existing behavior, you can use destructuring of the argument. For example:
-
-  ```js
-  streamResolver(id) { }               // old
-  streamResolver(id, callback) { }     // old
-  streamResolver({ id }) { }           // new
-  streamResolver({ id }, callback) { } // new
-
-  dimensionFunction(id) { }            // old
-  dimensionFunction({ id }) { }        // new
-  ```
-
-  See [issue #19](https://github.com/samvera/node-iiif/issues/19) for context on why this change was made.
 
 ## Contributing
 

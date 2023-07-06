@@ -1,7 +1,6 @@
 const Sharp = require('sharp');
-const IIIFError = require('./error');
 const debug = require('debug')('iiif-processor:transform');
-const { Calculator, ...passthrough } = require('./calculator');
+const IIIFVersions = require('./versions');
 
 const ExtractAttributes = [
   'topOffsetPre',
@@ -12,47 +11,50 @@ const ExtractAttributes = [
 
 const SCALE_PRECISION = 10000000;
 
-class Operations extends Calculator {
+class Operations {
   #pages;
   #pipeline;
 
-  constructor (dims, opts) {
-    super(dims[0]);
+  constructor (version, dims, opts) {
+    const { sharp, ...rest } = opts;
+    const Implementation = IIIFVersions[version];
+    this.calculator = new Implementation.Calculator(dims[0], rest);
+
     this.#pages = dims
       .map((dim, page) => {
         return { ...dim, page };
       })
       .sort((a, b) => (b.width * b.height) - (a.width * a.height));
-    this.#pipeline = Sharp({ limitInputPixels: false, ...opts });
+    this.#pipeline = Sharp({ limitInputPixels: false, ...sharp });
   }
 
   region (v) {
-    super.region(v);
+    this.calculator.region(v);
     const { region } = this.info();
     this.#pipeline = this.#pipeline.extract(region);
 
     const ifPositive = (a, b) => (a > 0 ? a : b);
-    this.dims.width = ifPositive(
+    this.calculator.dims.width = ifPositive(
       this.#pipeline.options.widthPre,
-      this.dims.width
+      this.calculator.dims.width
     );
-    this.dims.height = ifPositive(
+    this.calculator.dims.height = ifPositive(
       this.#pipeline.options.heightPre,
-      this.dims.height
+      this.calculator.dims.height
     );
 
     return this;
   }
 
   size (v) {
-    super.size(v);
+    this.calculator.size(v);
     const { size } = this.info();
     this.#pipeline = this.#pipeline.resize(size);
     return this;
   }
 
   rotation (v) {
-    super.rotation(v);
+    this.calculator.rotation(v);
     const { flop, degree } = this.info().rotation;
     if (flop) {
       this.#pipeline = this.#pipeline.flop();
@@ -62,7 +64,7 @@ class Operations extends Calculator {
   }
 
   quality (v) {
-    super.quality(v);
+    this.calculator.quality(v);
     const { quality } = this.info();
     if (quality === 'color' || quality === 'default') {
       // do nothing
@@ -75,7 +77,7 @@ class Operations extends Calculator {
   }
 
   format (v, density) {
-    super.format(v, density);
+    this.calculator.format(v, density);
 
     const { format } = this.info();
 
@@ -102,6 +104,15 @@ class Operations extends Calculator {
     }
     return this;
   }
+
+  info () {
+    return this.calculator.info();
+  }
+
+  canonicalPath () {
+    return this.calculator.canonicalPath();
+  }
+
 
   #setPage () {
     if (this.#pipeline.options.input.page) return this;
@@ -139,8 +150,4 @@ class Operations extends Calculator {
   }
 }
 
-module.exports = {
-  Operations,
-  IIIFError,
-  ...passthrough
-};
+module.exports = { Operations };

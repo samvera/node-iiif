@@ -2,6 +2,13 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v4.0.0
+- Add support for [IIIF Image API v3.0.0](https://iiif.io/api/image/3.0/) alongside support for [v2.1.1](https://iiif.io/api/image/2.1/)
+- Add `canonicalLink` and `profileLink` properties to the response to support the respective link header features (see [example](./examples/tiny-iiif/iiif.js#L28) of how to use this)
+- [BREAKING CHANGE] Require `version` argument in `IIIF.Processor` constructor
+- [BREAKING CHANGE] The `maxWidth` option was changed to `max: { width, height, area }` in order to 
+  support the IIIF `maxHeight` and `maxArea` constraints 
+
 ##### v3.2.0
 - Major refactor to support multi-resolution source images
 - Backward-compatible overhaul of `dimensionFunction`
@@ -18,7 +25,23 @@ Only features and major fixes are listed. Everything else can be considered a mi
 
 ##### v2.0.0
 
-- Pass `baseUrl` to `streamResolver` and `dimension` functions
+- [BREAKING CHANGE] The `id` parameter passed to the [stream resolver](#stream-resolver) and 
+  [dimensions callback](#dimension-function) was changed from a `string` to an `object` containing 
+  the `id` and `baseUrl`.
+
+  To maintain the existing behavior, you can use destructuring of the argument. For example:
+
+  ```js
+  streamResolver(id) { }               // old
+  streamResolver(id, callback) { }     // old
+  streamResolver({ id }) { }           // new
+  streamResolver({ id }, callback) { } // new
+
+  dimensionFunction(id) { }            // old
+  dimensionFunction({ id }) { }        // new
+  ```
+
+  See [issue #19](https://github.com/samvera/node-iiif/issues/19) for context on why this change was made.
 - Use a consistent name for dimensions function in `README.md`
 
 ##### v1.0.0
