@@ -11,8 +11,25 @@ const fixupSlashes = (path, leaveOne) => {
   return path?.replace(/^\/*/, replacement).replace(/\/*$/, replacement);
 };
 
+const getIIIFVersion = (url, opts = {}) => {
+  const uri = new URL(url);
+  try {
+    let { iiifVersion, pathPrefix } = opts;
+    if (!iiifVersion) {
+      const match = /^\/iiif\/(?<v>\d)\//.exec(uri.pathname);
+      iiifVersion = match.groups.v;
+    }
+    if (!pathPrefix) pathPrefix = `iiif/${iiifVersion}/`;
+    return { iiifVersion, pathPrefix };
+  } catch {
+    throw new IIIFError(`Cannot determine IIIF version from path ${uri.path}`);
+  }
+};
+
 class Processor {
-  constructor (version, url, streamResolver, opts = {}) {
+  constructor (url, streamResolver, opts = {}) {
+    const { iiifVersion, pathPrefix } = getIIIFVersion(url, opts);
+
     if (typeof streamResolver !== 'function') {
       throw new IIIFError('streamResolver option must be specified');
     }
@@ -22,14 +39,13 @@ class Processor {
     };
 
     const defaults = {
-      pathPrefix: `/iiif/${version}/`,
       dimensionFunction: this.defaultDimensionFunction,
       density: null
     };
 
     this
-      .setOpts({ ...defaults, ...opts })
-      .initialize(version, url, streamResolver);
+      .setOpts({ ...defaults, ...opts, pathPrefix, iiifVersion })
+      .initialize(url, streamResolver);
   }
 
   setOpts (opts) {
@@ -40,6 +56,7 @@ class Processor {
     this.density = opts.density;
     this.pathPrefix = fixupSlashes(opts.pathPrefix, true);
     this.sharpOptions = { ...opts.sharpOptions };
+    this.version = opts.iiifVersion;
 
     return this;
   }
@@ -53,9 +70,11 @@ class Processor {
     return result;
   }
 
-  initialize (version, url, streamResolver) {
-    this.version = version;
+  initialize (url, streamResolver) {
     this.Implementation = IIIFVersions[this.version];
+    if (!this.Implementation) {
+      throw new IIIFError(`No implementation found for IIIF Image API v${this.version}`);
+    }
 
     const params = this.parseUrl(url);
     debug('Parsed URL: %j', params);

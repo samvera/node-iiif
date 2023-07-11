@@ -35,6 +35,7 @@ const processor = new IIIF.Processor(version, url, streamResolver, opts);
     * This has no effect whatsoever on the size of the image that gets returned; it's simply for convenience when using
       the resulting image in software that calculates a default print size based on the height, width, and density
   * `pathPrefix` (string) – the default prefix that precedes the `id` part of the URL path (default: `/iiif/2/`)
+  * `version` (number) – the major version (`2` or `3`) of the IIIF Image API to use (default: inferred from `/iiif/{version}/`)
 
 ## Examples
 

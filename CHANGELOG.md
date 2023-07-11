@@ -5,7 +5,7 @@ Only features and major fixes are listed. Everything else can be considered a mi
 ##### v4.0.0
 - Add support for [IIIF Image API v3.0.0](https://iiif.io/api/image/3.0/) alongside support for [v2.1.1](https://iiif.io/api/image/2.1/)
 - Add `canonicalLink` and `profileLink` properties to the response to support the respective link header features (see [example](./examples/tiny-iiif/iiif.js#L28) of how to use this)
-- [BREAKING CHANGE] Require `version` argument in `IIIF.Processor` constructor
+- Add `version` to `IIIF.Processor` constructor options
 - [BREAKING CHANGE] The `maxWidth` option was changed to `max: { width, height, area }` in order to 
   support the IIIF `maxHeight` and `maxArea` constraints 
 

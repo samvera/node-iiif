@@ -11,7 +11,7 @@ const dims = [{ width: 1024, height: 768 }];
 
 describe('IIIF Processor', () => {
   beforeEach(() => {
-    subject = new Processor(2, `${base}/10,20,30,40/pct:50/45/default.png`, ({ id }) => id);
+    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.png`, ({ id }) => id);
   });
 
   it('Parse URL', () => {
@@ -42,7 +42,7 @@ describe('IIIF Processor', () => {
 
 describe('Include metadata', () => {
   beforeEach(() => {
-    subject = new Processor(2, 
+    subject = new Processor( 
       `${base}/10,20,30,40/pct:50/45/default.jpg`,
       ({ id }) => id,
       { includeMetadata: true }
@@ -59,7 +59,7 @@ describe('Include metadata', () => {
 
 describe('TIFF Download', () => {
   beforeEach(() => {
-    subject = new Processor(2, `${base}/10,20,30,40/pct:50/45/default.tif`, ({ id }) => id);
+    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, ({ id }) => id);
   });
 
   it('Output TIFF format', async () => {
@@ -80,7 +80,7 @@ describe('TIFF Download', () => {
 describe('Density', () => {
   beforeEach(() => {
     subject = (ext) => {
-      return new Processor(2, 
+      return new Processor( 
         `https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.${ext}`,
         ({ id }) => id,
         { density: 600 }
@@ -116,7 +116,7 @@ describe('Density', () => {
 
 describe('constructor', () => {
   it('must parse the object-based constructor', () => {
-    subject = new Processor(2, 
+    subject = new Processor( 
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       () => 'streamResolver',
       { dimensionFunction: () => 'dimensionFunction', max: { width: 'maxWidth' }, includeMetadata: true, density: 600 }
@@ -132,7 +132,7 @@ describe('constructor', () => {
   it('properly handles custom sharp options', async () => {
     let pipe;
     
-    subject = new Processor(2,
+    subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       () => 'streamResolver',
       { sharpOptions: { sequentialRead: false } }
@@ -140,26 +140,48 @@ describe('constructor', () => {
     pipe = await subject.operations(dims).pipeline();
     assert.strictEqual(pipe.options.input.sequentialRead, false);
     
-    subject = new Processor(2, 
+    subject = new Processor( 
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       () => 'streamResolver',
       { sharpOptions: { sequentialRead: true } }
     );
     pipe = await subject.operations(dims).pipeline();
     assert.strictEqual(pipe.options.input.sequentialRead, true);
-  })
+  });
+
+  it('takes a custom version and path prefix', () => {
+    subject = new Processor(
+        'https://example.org/iiif/III/ab/cd/ef/gh/i/info.json',
+        ({ id }) => id,
+        { iiifVersion: 3, pathPrefix: '/iiif/III/' }
+      );
+    assert.strictEqual(subject.version, 3);
+    assert.strictEqual(subject.pathPrefix, '/iiif/III/');
+  });
 });
 
 describe('constructor errors', () => {
   it('requires a streamResolver', () => {
     assert.throws(() => {
-      return new Processor(2, `${base}/10,20,30,40/pct:50/45/default.tif`, {});
+      return new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, {});
     }, IIIFError);
   });
 
   it('requires a valid URL', () => {
     assert.throws(() => {
-      return new Processor(2, `${base}/10,20,30,40/pct:50/45/default.blargh`, ({ id }) => id);
+      return new Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, ({ id }) => id);
+    }, IIIFError);
+  });
+
+  it('needs to be able to infer the version', () => {
+    assert.throws(() => {
+      return new Processor('https://example.org/iiif/X/ab/cd/ef/gh/i/info.json', ({ id }) => id);
+    }, IIIFError);
+  });
+
+  it('requires a valid IIIF version', () => {
+    assert.throws(() => {
+      return new Processor('https://example.org/iiif/0/ab/cd/ef/gh/i/info.json', ({ id }) => id);
     }, IIIFError);
   });
 });
@@ -177,7 +199,7 @@ describe('stream processor', () => {
       });
     }
 
-    const subject = new Processor(2, `https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: 'iiif/2/ab/cd/ef/gh'});
+    const subject = new Processor(`https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: 'iiif/2/ab/cd/ef/gh'});
     subject.execute();
   })
 })
@@ -198,7 +220,7 @@ describe('dimension function', () => {
       return { w: 100, h: 100 }
     }
 
-    const subject = new Processor(2, 
+    const subject = new Processor( 
       `https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
       { dimensionFunction, pathPrefix: 'iiif/2/ab/cd/ef/gh' }

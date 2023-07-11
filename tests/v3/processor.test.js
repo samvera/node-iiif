@@ -11,7 +11,7 @@ const dims = [{ width: 1024, height: 768 }];
 
 describe('IIIF Processor', () => {
   beforeEach(() => {
-    subject = new Processor(3, `${base}/10,20,30,40/pct:50/45/default.png`, ({ id }) => id);
+    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.png`, ({ id }) => id);
   });
 
   it('Parse URL', () => {
@@ -42,7 +42,7 @@ describe('IIIF Processor', () => {
 
 describe('Include metadata', () => {
   beforeEach(() => {
-    subject = new Processor(3, 
+    subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.jpg`,
       ({ id }) => id,
       { includeMetadata: true }
@@ -59,7 +59,7 @@ describe('Include metadata', () => {
 
 describe('TIFF Download', () => {
   beforeEach(() => {
-    subject = new Processor(3, `${base}/10,20,30,40/pct:50/45/default.tif`, ({ id }) => id);
+    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, ({ id }) => id);
   });
 
   it('Output TIFF format', async () => {
@@ -80,7 +80,7 @@ describe('TIFF Download', () => {
 describe('Density', () => {
   beforeEach(() => {
     subject = (ext) => {
-      return new Processor(3, 
+      return new Processor(
         `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.${ext}`,
         ({ id }) => id,
         { density: 600 }
@@ -121,7 +121,7 @@ describe('constructor', () => {
       height: 'maxHeight',
       area: 'maxArea'
     }
-    subject = new Processor(3, 
+    subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       () => 'streamResolver',
       { dimensionFunction: () => 'dimensionFunction', max, includeMetadata: true, density: 600 }
@@ -138,7 +138,7 @@ describe('constructor', () => {
 
   it('rejects maxHeight without maxWidth', () => {
     assert.throws(() => 
-      new Processor(3, 
+      new Processor(
         `${base}/10,20,30,40/pct:50/45/default.tif`,
         () => 'streamResolver',
         { dimensionFunction: () => 'dimensionFunction', max: { height: 400 }, includeMetadata: true, density: 600 }
@@ -150,7 +150,7 @@ describe('constructor', () => {
   it('properly handles custom sharp options', async () => {
     let pipe;
     
-    subject = new Processor(3, 
+    subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       () => 'streamResolver',
       { sharpOptions: { sequentialRead: false } }
@@ -158,7 +158,7 @@ describe('constructor', () => {
     pipe = await subject.operations(dims).pipeline();
     assert.strictEqual(pipe.options.input.sequentialRead, false);
     
-    subject = new Processor(3, 
+    subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       () => 'streamResolver',
       { sharpOptions: { sequentialRead: true } }
@@ -171,13 +171,13 @@ describe('constructor', () => {
 describe('constructor errors', () => {
   it('requires a streamResolver', () => {
     assert.throws(() => {
-      return new Processor(3, `${base}/10,20,30,40/pct:50/45/default.tif`, {});
+      return new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, {});
     }, IIIFError);
   });
 
   it('requires a valid URL', () => {
     assert.throws(() => {
-      return new Processor(3, `${base}/10,20,30,40/pct:50/45/default.blargh`, ({ id }) => id);
+      return new Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, ({ id }) => id);
     }, IIIFError);
   });
 });
@@ -195,7 +195,7 @@ describe('stream processor', () => {
       });
     }
 
-    const subject = new Processor(3, `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: 'iiif/3/ab/cd/ef/gh'});
+    const subject = new Processor(`https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: 'iiif/3/ab/cd/ef/gh'});
     subject.execute();
   })
 })
@@ -216,7 +216,7 @@ describe('dimension function', () => {
       return { w: 100, h: 100 }
     }
 
-    const subject = new Processor(3, 
+    const subject = new Processor(
       `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
       { dimensionFunction, pathPrefix: 'iiif/3/ab/cd/ef/gh' }

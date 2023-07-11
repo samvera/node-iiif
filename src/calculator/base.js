@@ -47,7 +47,7 @@ class Base {
 
     const re = new RegExp(`^/?(?<id>.+?)/(?:(?<info>info.json)|${transformation})$`);
     const result = re.exec(path)?.groups;
-    if (!result) throw new IIIFError(`Not a valid IIIF path: ${path}`);
+    if (!result) throw new IIIFError(`Not a valid IIIF path: ${path}`, { statusCode: 400 });
     return result;
   }
 
@@ -80,7 +80,7 @@ class Base {
     debug('validating %s %s against %s', type, v, re);
 
     if (!re.test(v)) {
-      throw new IIIFError(`Invalid ${type}: ${v}`);
+      throw new IIIFError(`Invalid ${type}: ${v}`, { statusCode: 400 });
     }
     return true;
   }
@@ -251,7 +251,7 @@ function regionXYWH (v) {
   }
   const result = { left: v[0], top: v[1], width: v[2], height: v[3] };
   if (result.width === 0 || result.height === 0) {
-    throw new IIIFError('Region width and height must both be > 0');
+    throw new IIIFError('Region width and height must both be > 0', { statusCode: 400 });
   }
   return result;
 }
@@ -259,7 +259,7 @@ function regionXYWH (v) {
 function sizePct (v, dims) {
   const pct = Number(v);
   if (isNaN(pct) || pct <= 0) {
-    throw new IIIFError(`Invalid resize %: ${v}`);
+    throw new IIIFError(`Invalid resize %: ${v}`, { statusCode: 400 });
   }
   const width = Math.round(dims.width * (pct / 100.0));
   return sizeWH(`${width},`);
@@ -278,7 +278,7 @@ function sizeWH (v) {
   }
   [result.width, result.height] = v;
   if (result.width === 0 || result.height === 0) {
-    throw new IIIFError('Resize width and height must both be > 0');
+    throw new IIIFError('Resize width and height must both be > 0', { statusCode: 400 });
   }
   return result;
 }
