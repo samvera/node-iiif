@@ -1,16 +1,16 @@
 'use strict';
 
 const assert = require('assert');
-const { Calculator, pathToIiif } = require('../lib/calculator');
-const IIIFError = require('../lib/error');
+const { Calculator } = require('../../src/calculator/v2');
+const IIIFError = require('../../src/error');
 
-const { qualities, formats, regions, sizes, rotations } = require('./fixtures/iiif-values');
+const { v2: { qualities, formats, regions, sizes, rotations } } = require('../fixtures/iiif-values');
 
 let subject;
 
-describe('pathToIiif', () => {
+describe('parsePath', () => {
   it('properly parses a IIIF path', () => {
-    const { id, region, size, rotation, quality, format } = pathToIiif('/abc-123/500,500,256,256/pct:75/45/bitonal.png');
+    const { id, region, size, rotation, quality, format } = Calculator.parsePath('/abc-123/500,500,256,256/pct:75/45/bitonal.png');
     assert.equal(id, 'abc-123');
     assert.equal(region, '500,500,256,256');
     assert.equal(size, 'pct:75');
@@ -21,7 +21,7 @@ describe('pathToIiif', () => {
 
   it('throws a IIIFError when an invalid path is passed', () => {
     ['', '/abc-123/blergh/full/0/default.jpg', '/abc-123/full/50/0/default.jpg']
-    .forEach((value) => assert.throws(() => pathToIiif(value)));
+    .forEach((value) => assert.throws(() => Calculator.parsePath(value)));
   });
 });
 
@@ -79,6 +79,7 @@ describe('Calculator', () => {
       quality: 'default',
       format: { type: 'jpg', density: 600 },
       fullSize: { width: 2048, height: 1536 },
+      upscale: true
     };
 
     subject.region("pct:50,50,25,25").size("512,384").rotation("45").quality("default").format("jpg", 600);
