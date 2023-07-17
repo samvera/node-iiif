@@ -72,4 +72,4 @@ Only features and major fixes are listed. Everything else can be considered a mi
 - [Michael B. Klein](https://github.com/mbklein)
 - [Kate Lynch](https://github.com/kelynch)
 - [Ben Limmer](https://github.com/blimmer)
-- [Dan Wolfe](https://github.com/danthewolfe)
+- [Theia Wolfe](https://github.com/theiawolfe)
