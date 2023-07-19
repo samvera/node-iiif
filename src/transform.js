@@ -128,10 +128,10 @@ class Operations {
     debug('Using page %d (%j) as source', page, resolution);
     this.#pipeline.options.input.page = page;
 
-    const newScale = Math.round(resolution.width / this.#pages[0].width * SCALE_PRECISION) / SCALE_PRECISION;
+    const newScale = Math.floor(resolution.width / this.#pages[0].width * SCALE_PRECISION) / SCALE_PRECISION;
     for (const attr of ExtractAttributes) {
       if (this.#pipeline.options[attr] > 0) {
-        const newValue = Math.round(this.#pipeline.options[attr] * newScale);
+        const newValue = Math.floor(this.#pipeline.options[attr] * newScale);
         debug('Scaling %s from %f to %f', attr, this.#pipeline.options[attr], newValue);
         this.#pipeline.options[attr] = newValue;
       }

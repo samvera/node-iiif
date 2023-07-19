@@ -21,7 +21,7 @@ function createRouter(version) {
 
     try {
       const iiifUrl = `${req.protocol}://${req.get("host")}${req.path}`;
-      const iiifProcessor = new Processor(version, iiifUrl, streamImageFromFile);
+      const iiifProcessor = new Processor(iiifUrl, streamImageFromFile);
       const result = await iiifProcessor.execute();
       return res
         .set("Content-Type", result.contentType)
@@ -29,7 +29,6 @@ function createRouter(version) {
         .status(200)
         .send(result.body);
     } catch (err) {
-      throw err;
       const statusCode = err.statusCode || 502;
       return res.status(statusCode).send(err.message);
     }

@@ -120,8 +120,8 @@ describe('IIIF transformation', () => {
     
     assert(result.canonicalLink);
     assert(result.profileLink);
-    assert.strictEqual(size.width, 25);
-    assert.strictEqual(size.height, 25);
+    assert.strictEqual(size.width, 24);
+    assert.strictEqual(size.height, 24);
     assert.strictEqual(size.format, 'png');
   });
 });
@@ -141,8 +141,8 @@ describe('Two-argument streamResolver', () => {
     const result = await subject.execute();
     const size = await Sharp(result.body).metadata();
 
-    assert.strictEqual(size.width, 25);
-    assert.strictEqual(size.height, 25);
+    assert.strictEqual(size.width, 24);
+    assert.strictEqual(size.height, 24);
     assert.strictEqual(size.format, 'png');
   });
 });
