@@ -102,7 +102,7 @@ class Processor {
   async defaultDimensionFunction ({ id, baseUrl }) {
     const result = [];
     let page = 0;
-    const target = sharp({ page });
+    const target = sharp({ limitInputPixels: false, page });
 
     return await this.withStream({ id, baseUrl }, async (stream) => {
       stream.pipe(target);
