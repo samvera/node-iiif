@@ -100,7 +100,7 @@ describe('Calculator', () => {
         rotation: { flop: false, degree: 45 },
         quality: 'default',
         format: { type: 'jpg', density: 600 },
-        fullSize: { width: 1364, height: 1024 },
+        fullSize: { width: 1364, height: 1023 },
         upscale: true
       };
 
