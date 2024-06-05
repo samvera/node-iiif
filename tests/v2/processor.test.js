@@ -217,7 +217,7 @@ describe('dimension function', () => {
     const dimensionFunction = ({ id, baseUrl }) => {
       expect(id).toEqual('i');
       expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh/');
-      return { w: 100, h: 100 }
+      return { width: 100, height: 100 }
     }
 
     const subject = new Processor( 

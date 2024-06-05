@@ -68,7 +68,6 @@ class Base {
       rotation: { flop: false, degree: 0 },
       quality: 'default',
       format: { type: 'jpg' },
-      fullSize: { ...dims },
       upscale: true
     };
   }
@@ -101,7 +100,6 @@ class Base {
       this._parsedInfo.region = regionXYWH(v);
     }
     this._canonicalInfo.region = isFull ? 'full' : this._parsedInfo.region;
-    this._parsedInfo.fullSize = fullSize(this._sourceDims, this._parsedInfo);
     return this;
   }
 
@@ -151,7 +149,10 @@ class Base {
   }
 
   info () {
-    return this._parsedInfo;
+    return {
+      ...this._parsedInfo,
+      fullSize: fullSize(this._sourceDims, this._parsedInfo)
+    };
   }
 
   canonicalPath () {
@@ -162,8 +163,7 @@ class Base {
   _setSize (v) {
     const max = { ...this.opts.max };
     max.height = max.height || max.width;
-    this._parsedInfo.size = v;
-    this._parsedInfo.fullSize = fullSize(this._sourceDims, this._parsedInfo);
+    this._parsedInfo.size = { ...v };
 
     // Make sure size doesn't violate configured maximums
     this._constrainSize(max);
@@ -190,7 +190,6 @@ class Base {
       if (this._parsedInfo.size.height) {
         this._parsedInfo.size.height = Math.floor(this._parsedInfo.size.height * constraint);
       }
-      this._parsedInfo.fullSize = fullSize(this._sourceDims, this._parsedInfo);
     }
   }
 
@@ -206,15 +205,25 @@ function minNum (...args) {
   return Math.min(...nums);
 }
 
-function findProportion (original, actual, missing) {
-  return (actual / original) * missing;
-}
-
 function fullSize (dims, { region, size }) {
-  const height = size.height || findProportion(dims.width, size.width, dims.height);
-  const width = size.width || findProportion(dims.height, size.height, dims.width);
-  const regionPct = { width: region.width / dims.width, height: region.height / dims.height };
-  return { width: Math.floor(width / regionPct.width), height: Math.floor(height / regionPct.height) };
+  let scaleFactor;
+  if (size.width && size.height) {
+    scaleFactor = Math.min(
+      size.width / region.width,
+      size.height / region.height
+    );
+  } else if (size.width) {
+    scaleFactor = size.width / region.width;
+  } else if (size.height) {
+    scaleFactor = size.height / region.height;
+  } else {
+    throw new IIIFError('Must specify at least one of width or height', { statusCode: 400 });
+  }
+
+  return {
+    width: Math.floor(dims.width * scaleFactor),
+    height: Math.floor(dims.height * scaleFactor)
+  };
 }
 
 function regionSquare (dims) {
