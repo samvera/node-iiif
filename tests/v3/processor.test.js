@@ -8,10 +8,11 @@ const Processor = require('../../src/processor');
 let subject;
 const base = 'https://example.org/iiif/3/ab/cd/ef/gh/i';
 const dims = [{ width: 1024, height: 768 }];
+const identityResolver = ({ id }) => id;
 
 describe('IIIF Processor', () => {
   beforeEach(() => {
-    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.png`, ({ id }) => id);
+    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.png`, identityResolver);
   });
 
   it('Parse URL', () => {
@@ -40,6 +41,30 @@ describe('IIIF Processor', () => {
   });
 });
 
+describe("Minimum width and height", () => {
+  beforeEach(() => {
+    subject = new Processor(
+      `${base}/8192,0,7,5466/1,342/0/default.jpg`,
+      identityResolver
+    );
+  });
+
+  it("Avoids having a width or height < 1", async () => {
+    const dims = [
+      { width: 8199, height: 5466 },
+      { width: 4099, height: 2733 },
+      { width: 2049, height: 1366 },
+      { width: 1024, height: 683 },
+      { width: 512, height: 341 },
+      { width: 256, height: 170 }
+    ];
+    const pipe = await subject.operations(dims).pipeline();
+    const opts = pipe.options;
+    assert.notEqual(opts.widthPre, 0);
+    assert.notEqual(opts.heightPre, 0);
+  });
+});
+
 describe('Include metadata', () => {
   beforeEach(() => {
     subject = new Processor(
@@ -59,7 +84,7 @@ describe('Include metadata', () => {
 
 describe('TIFF Download', () => {
   beforeEach(() => {
-    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, ({ id }) => id);
+    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, identityResolver);
   });
 
   it('Output TIFF format', async () => {
@@ -177,7 +202,7 @@ describe('constructor errors', () => {
 
   it('requires a valid URL', () => {
     assert.throws(() => {
-      return new Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, ({ id }) => id);
+      return new Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, identityResolver);
     }, IIIFError);
   });
 });
