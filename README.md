@@ -18,10 +18,9 @@ npm install iiif-processor --save
 ```javascript
 const IIIF = require('iiif-processor');
 
-const processor = new IIIF.Processor(version, url, streamResolver, opts);
+const processor = new IIIF.Processor(url, streamResolver, opts);
 ```
 
-* `version` (number, required) – the version of the IIIF spec to use (`2` or `3`)
 * `url` (string, required) - the URL of the IIIF resource to process
 * `streamResolver` (function, required) – a callback function that returns a readable image stream for a given request ([see below](#stream-resolver))
 * `opts`:
