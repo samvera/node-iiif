@@ -1,4 +1,5 @@
 module.exports = {
+  Error: require('./error'),
   Processor: require('./processor'),
-  Error: require('./error')
+  Versions: require('./versions')
 };
