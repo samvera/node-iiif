@@ -2,6 +2,10 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v5.0.0
+- Export `Calculator`
+- Make `sharp` an optional dependency for those who just want to use `Calculator`
+
 ##### v4.0.0
 - Add support for [IIIF Image API v3.0.0](https://iiif.io/api/image/3.0/) alongside support for [v2.1.1](https://iiif.io/api/image/2.1/)
 - Add `canonicalLink` and `profileLink` properties to the response to support the respective link header features (see [example](./examples/tiny-iiif/iiif.js#L28) of how to use this)

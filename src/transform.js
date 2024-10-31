@@ -141,7 +141,7 @@ class Operations {
   }
 
   withMetadata (v) {
-    if (v) this.#pipeline = this.#pipeline.withMetadata();
+    if (v) this.#pipeline = this.#pipeline.keepMetadata();
     return this;
   }
 

@@ -37,7 +37,7 @@ describe('IIIF Processor', () => {
     assert.strictEqual(opts.heightPre, 40);
     assert.strictEqual(opts.formatOut, 'png');
     assert.strictEqual(opts.canvas, 'crop');
-    assert.strictEqual(opts.withMetadata, false);
+    assert.strictEqual(opts.keepMetadata, 0);
   });
 });
 
@@ -75,7 +75,7 @@ describe('Include metadata', () => {
     const pipe = await subject.operations(dims).pipeline();
     const opts = pipe.options;
 
-    assert.strictEqual(opts.withMetadata, true);
+    assert.notEqual(opts.keepMetadata, 0);
   });
 });
 
