@@ -2,6 +2,9 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v5.1.0
+- Update `pathPrefix` constructor option to accept a `{{version}}` placeholder and RegExp elements (default: `/iiif/{{version}}/`)
+
 ##### v5.0.0
 - Export `Calculator`
 - Make `sharp` an optional dependency for those who just want to use `Calculator`

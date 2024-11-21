@@ -14,7 +14,7 @@ let consoleWarnMock;
 
 describe('info.json', () => {
   it('produces a valid info.json', async () => {
-    subject = new Processor(`${base}/info.json`, streamResolver, { pathPrefix: 'iiif/3/ab/cd/ef/gh' });
+    subject = new Processor(`${base}/info.json`, streamResolver, { pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' });
     const result = await subject.execute();
     const info = JSON.parse(result.body);
     assert.strictEqual(info.id, 'https://example.org/iiif/3/ab/cd/ef/gh/i');
@@ -24,7 +24,7 @@ describe('info.json', () => {
   });
 
   it('respects max size options', async () => {
-    subject = new Processor(`${base}/info.json`, streamResolver, { pathPrefix: 'iiif/3/ab/cd/ef/gh', max: { width: 600 } });
+    subject = new Processor(`${base}/info.json`, streamResolver, { pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/', max: { width: 600 } });
     const result = await subject.execute();
     const info = JSON.parse(result.body);
     assert.strictEqual(info.maxWidth, 600);

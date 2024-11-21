@@ -220,7 +220,7 @@ describe('stream processor', () => {
       });
     }
 
-    const subject = new Processor(`https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: 'iiif/3/ab/cd/ef/gh'});
+    const subject = new Processor(`https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/'});
     subject.execute();
   })
 })
@@ -244,7 +244,7 @@ describe('dimension function', () => {
     const subject = new Processor(
       `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
-      { dimensionFunction, pathPrefix: 'iiif/3/ab/cd/ef/gh' }
+      { dimensionFunction, pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' }
     );
     subject.execute();
   })

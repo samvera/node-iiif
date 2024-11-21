@@ -178,7 +178,8 @@ describe('constructor', () => {
         { iiifVersion: 3, pathPrefix: '/iiif/III/' }
       );
     assert.strictEqual(subject.version, 3);
-    assert.strictEqual(subject.pathPrefix, '/iiif/III/');
+    assert.strictEqual(subject.id, 'ab/cd/ef/gh/i');
+    assert.strictEqual(subject.baseUrl, 'https://example.org/iiif/III/');
   });
 });
 
@@ -221,7 +222,7 @@ describe('stream processor', () => {
       });
     }
 
-    const subject = new Processor(`https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: 'iiif/2/ab/cd/ef/gh'});
+    const subject = new Processor(`https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/'});
     subject.execute();
   })
 })
@@ -245,7 +246,7 @@ describe('dimension function', () => {
     const subject = new Processor( 
       `https://example.org/iiif/2/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
-      { dimensionFunction, pathPrefix: 'iiif/2/ab/cd/ef/gh' }
+      { dimensionFunction, pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' }
     );
     subject.execute();
   })
