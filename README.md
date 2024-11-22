@@ -33,7 +33,7 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
   * `density` (integer) – the pixel density to be included in the result image in pixels per inch
     * This has no effect whatsoever on the size of the image that gets returned; it's simply for convenience when using
       the resulting image in software that calculates a default print size based on the height, width, and density
-  * `pathPrefix` (string) – the default prefix that precedes the `id` part of the URL path (default: `/iiif/2/`)
+  * `pathPrefix` (string) – the template used to extract the IIIF version and API parameters from the URL path (default: `/iiif/{{version}}/`) ([see below](#path-prefix))
   * `version` (number) – the major version (`2` or `3`) of the IIIF Image API to use (default: inferred from `/iiif/{version}/`)
 
 ## Examples
@@ -108,6 +108,14 @@ async function dimensionFunction({ id, baseUrl }) {
   return { width: dimensions.width, height: dimensions.height };
 }
 ```
+
+### Path Prefix
+
+The `pathPrefix` constructor option provides a tremendous amount of flexibility in how IIIF URLs are structured. The prefix includes one placeholder `{{version}}`, indicating the major version of the IIIF Image API to use when interpreting the rest of the path.
+
+* The `pathPrefix` _must_ start and end with `/`.
+* The `pathPrefix` _must_ include the `{{version}}` placeholder _unless_ the `version` constructor option is specified. If both are present, the constructor option will take precedence.
+* To allow for maximum flexibility, the `pathPrefix` is interpreted as a [JavaScript regular expression](https://www.w3schools.com/jsref/jsref_obj_regexp.asp). For example, `/.+?/iiif/{{version}}/` would allow your path to have arbitrary path elements before `/iiif/`. Be careful when including greedy quantifiers (e.g., `+` as opposed to `+?`), as they may produce unexpected results. `/` characters are treated as literal path separators, not regular expression delimiters as they would be in JavaScript code.
 
 ### Processing
 

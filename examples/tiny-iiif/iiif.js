@@ -2,7 +2,7 @@ import { App } from '@tinyhttp/app';
 import { Processor } from 'iiif-processor';
 import fs from 'fs';
 import path from 'path';
-import { iiifImagePath, fileTemplate } from './config.js';
+import { iiifImagePath, iiifpathPrefix, fileTemplate } from './config.js';
 
 function createRouter(version) {
   const streamImageFromFile = ({ id }) => {
@@ -21,7 +21,7 @@ function createRouter(version) {
 
     try {
       const iiifUrl = `${req.protocol}://${req.get("host")}${req.path}`;
-      const iiifProcessor = new Processor(iiifUrl, streamImageFromFile);
+      const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, { pathPrefix: iiifpathPrefix });
       const result = await iiifProcessor.execute();
       return res
         .set("Content-Type", result.contentType)

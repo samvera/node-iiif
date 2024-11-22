@@ -6,29 +6,25 @@ const { Operations } = require('./transform');
 const IIIFError = require('./error');
 const IIIFVersions = require('./versions');
 
-const fixupSlashes = (path, leaveOne) => {
-  const replacement = leaveOne ? '/' : '';
-  return path?.replace(/^\/*/, replacement).replace(/\/*$/, replacement);
-};
+const defaultpathPrefix = '/iiif/{{version}}/';
 
-const getIIIFVersion = (url, opts = {}) => {
-  const uri = new URL(url);
-  try {
-    let { iiifVersion, pathPrefix } = opts;
-    if (!iiifVersion) {
-      const match = /^\/iiif\/(?<v>\d)\//.exec(uri.pathname);
-      iiifVersion = match.groups.v;
-    }
-    if (!pathPrefix) pathPrefix = `iiif/${iiifVersion}/`;
-    return { iiifVersion, pathPrefix };
-  } catch {
-    throw new IIIFError(`Cannot determine IIIF version from path ${uri.path}`);
+function getIiifVersion (url, template) {
+  const { origin, pathname } = new URL(url);
+  const templateMatcher = template.replace(/\{\{version\}\}/, '(?<iiifVersion>2|3)');
+  const pathMatcher = `^(?<prefix>${templateMatcher})(?<request>.+)$`;
+  const re = new RegExp(pathMatcher);
+  const parsed = re.exec(pathname);
+  if (parsed) {
+    parsed.groups.prefix = origin + parsed.groups.prefix;
+    return { ...parsed.groups };
+  } else {
+    throw new IIIFError('Invalid IIIF path');
   }
 };
 
 class Processor {
   constructor (url, streamResolver, opts = {}) {
-    const { iiifVersion, pathPrefix } = getIIIFVersion(url, opts);
+    const { prefix, iiifVersion, request } = getIiifVersion(url, opts.pathPrefix || defaultpathPrefix);
 
     if (typeof streamResolver !== 'function') {
       throw new IIIFError('streamResolver option must be specified');
@@ -44,8 +40,8 @@ class Processor {
     };
 
     this
-      .setOpts({ ...defaults, ...opts, pathPrefix, iiifVersion })
-      .initialize(url, streamResolver);
+      .setOpts({ ...defaults, iiifVersion, ...opts, prefix, request })
+      .initialize(streamResolver);
   }
 
   setOpts (opts) {
@@ -54,29 +50,21 @@ class Processor {
     this.max = { ...opts.max };
     this.includeMetadata = !!opts.includeMetadata;
     this.density = opts.density;
-    this.pathPrefix = fixupSlashes(opts.pathPrefix, true);
+    this.baseUrl = opts.prefix;
     this.sharpOptions = { ...opts.sharpOptions };
     this.version = opts.iiifVersion;
+    this.request = opts.request;
 
     return this;
   }
 
-  parseUrl (url) {
-    const parser = new RegExp(`(?<baseUrl>https?://[^/]+${this.pathPrefix})(?<path>.+)$`);
-    const { baseUrl, path } = parser.exec(url).groups;
-    const result = this.Implementation.Calculator.parsePath(path);
-    result.baseUrl = baseUrl;
-
-    return result;
-  }
-
-  initialize (url, streamResolver) {
+  initialize (streamResolver) {
     this.Implementation = IIIFVersions[this.version];
     if (!this.Implementation) {
       throw new IIIFError(`No implementation found for IIIF Image API v${this.version}`);
     }
 
-    const params = this.parseUrl(url);
+    const params = this.Implementation.Calculator.parsePath(this.request);
     debug('Parsed URL: %j', params);
     Object.assign(this, params);
     this.streamResolver = streamResolver;
@@ -143,7 +131,9 @@ class Processor {
       sizes.push({ width: size[0], height: size[1] });
     }
 
-    const id = [fixupSlashes(this.baseUrl), fixupSlashes(this.id)].join('/');
+    const uri = new URL(this.baseUrl);
+    uri.pathname = path.join(uri.pathname, this.id);
+    const id = uri.toString();
     const doc = this.Implementation.infoDoc({ id, ...dim, sizes, max: this.max });
     for (const prop in doc) {
       if (doc[prop] === null || doc[prop] === undefined) delete doc[prop];
