@@ -12,19 +12,28 @@ export type InfoJson = {
   body: string;
 };
 
+export type DimensionFunction = (
+  input: { id: string, baseUrl: string }
+) => Promise<Dimensions | Array<Dimensions>>;
+
+export type StreamResolver = (
+  input: { id: string, baseUrl: string },
+  callback?: (result: NodeJS.ReadableStream) => any
+) => Promise<NodeJS.ReadableStream>;
+
 export declare class Processor {
   constructor(
     url: string,
-    streamResolver: (id: string) => NodeJS.ReadableStream,
+    streamResolver: StreamResolver,
     opts?: {
-      dimensionFunction?: (id: string) => Dimensions | Array<Dimensions>,
-      max?: MaxDimensions,
-      includeMetadata?: boolean,
-      density?: number,
-      pathPrefix?: string,
-      version?: 2|3
+      dimensionFunction?: DimensionFunction;
+      max?: MaxDimensions;
+      includeMetadata?: boolean;
+      density?: number;
+      pathPrefix?: string;
+      version?: 2 | 3;
     }
   );
 
-  execute(): InfoJson | IiifImage;
+  execute(): Promise<InfoJson | IiifImage>;
 }
