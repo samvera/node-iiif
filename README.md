@@ -3,6 +3,7 @@
 [![Build Status](https://circleci.com/gh/samvera/node-iiif.svg?style=svg)](https://circleci.com/gh/samvera/node-iiif)
 [![Maintainability](https://api.codeclimate.com/v1/badges/b5da41e405f8c020c273/maintainability)](https://codeclimate.com/github/samvera/node-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/node-iiif/badge.svg)](https://coveralls.io/github/samvera/node-iiif)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif?ref=badge_shield)
 
 This module provides a full-featured image processor supporting the IIIF Image API versions [2.1](https://iiif.io/api/image/2.1/) and 
 [3.0](https://iiif.io/api/image/3.0/). It covers only the image processing pipeline itself, leaving input and output to the caller.
@@ -168,3 +169,6 @@ This repository follows the [Samvera Community Code of Conduct](https://samvera.
 ## License
 
 `node-iiif` is available under [the Apache 2.0 license](LICENSE).
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif?ref=badge_large)
