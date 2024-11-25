@@ -18,7 +18,7 @@ export type DimensionFunction = (
 
 export type StreamResolver = (
   input: { id: string, baseUrl: string },
-  callback?: (result: NodeJS.ReadableStream) => any
+  callback?: (result: NodeJS.ReadableStream) => Promise<unknown>
 ) => Promise<NodeJS.ReadableStream>;
 
 export declare class Processor {
@@ -31,7 +31,7 @@ export declare class Processor {
       includeMetadata?: boolean;
       density?: number;
       pathPrefix?: string;
-      version?: 2 | 3;
+      iiifVersion?: 2 | 3;
     }
   );
 
