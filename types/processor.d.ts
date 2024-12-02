@@ -17,14 +17,18 @@ export type DimensionFunction = (
 ) => Promise<Dimensions | Array<Dimensions>>;
 
 export type StreamResolver = (
-  input: { id: string, baseUrl: string },
-  callback?: (result: NodeJS.ReadableStream) => Promise<unknown>
+  input: { id: string, baseUrl: string }
 ) => Promise<NodeJS.ReadableStream>;
+
+export type StreamResolverWithCallback = (
+  input: { id: string, baseUrl: string },
+  callback: (result: NodeJS.ReadableStream) => Promise<unknown>
+) => Promise<unknown>;
 
 export declare class Processor {
   constructor(
     url: string,
-    streamResolver: StreamResolver,
+    streamResolver: StreamResolver | StreamResolverWithCallback,
     opts?: {
       dimensionFunction?: DimensionFunction;
       max?: MaxDimensions;
