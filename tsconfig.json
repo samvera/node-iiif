@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "typeRoots": ["types"]
+  },
+  "include": ["src/**/*.js"]
+}

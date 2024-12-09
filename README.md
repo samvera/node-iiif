@@ -64,18 +64,25 @@ the function to do its own cleanup.
 #### Amazon S3 Bucket Source
 
 ```javascript
-const AWS = require('aws-sdk');
+const { GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
 
 async function streamResolver({ id, baseUrl }, callback) {
-  let s3 = new AWS.S3();
-  let key = id + '.tif';
-  let request = s3.getObject({ Bucket: 'my-tiff-bucket', Key: key });
-  let stream = request.createReadStream();
+  const s3 = new S3Client();
+  const command = new GetObjectCommand({
+    Bucket: 'my-tiff-bucket',
+    Key: `${id}.tif`
+  });
+  const response = await s3.send(command);
+  const body = response.Body;
+
+  if (!stream) {
+    throw new Error(`Could not fetch object from S3: ${id}`);
+  }
+
   try {
-    return await callback(stream);
+    return callback ? await callback(stream) : stream;
   } finally {
-    stream.end().destroy();
-    request.abort();
+    stream.destroy();
   }
 }
 ```
