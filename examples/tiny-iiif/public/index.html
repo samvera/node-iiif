@@ -1,0 +1,56 @@
+<html>
+<head>
+    <title>IIIF Example</title>
+    <script src="/openseadragon/openseadragon.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+      }
+      .osd {
+        display: inline-block;
+        margin: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        width: 740px;
+        height: 1024px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="osd" id="openseadragon0"></div>
+    <!--
+    <div class="osd" id="openseadragon1"></div>
+    <div class="osd" id="openseadragon2"></div>
+    -->
+    <script type="text/javascript">
+      const images = ['nypl_1949733-vips']; // , 'nypl_1949733-convert', 'nypl_1949733-magick'];
+      for (const i in images) {
+        OpenSeadragon({
+            id: `openseadragon${i}`,
+            preserveViewport: true,
+            visibilityRatio:    1,
+            minZoomLevel:       1,
+            defaultZoomLevel:   1,
+            sequenceMode:       true,
+            tileSources:   [{
+              "@context": "http://iiif.io/api/image/2/context.json",
+              "@id": `http://localhost:3000/iiif/2/${images[i]}`,
+              "height": 4200,
+              "width": 3027,
+              "profile": [ "http://iiif.io/api/image/2/level2.json" ],
+              "protocol": "http://iiif.io/api/image",
+              "tiles": [{
+                "scaleFactors": [ 1, 2, 4, 8, 16, 32 ],
+                "width": 512
+              }]
+            },
+            ]
+        });
+      }
+    </script>
+  </body>
+</html>
