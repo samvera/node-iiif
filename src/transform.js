@@ -9,6 +9,7 @@ const ExtractAttributes = [
   'heightPre'
 ];
 
+const DEFAULT_PAGE_THRESHOLD = 1;
 const SCALE_PRECISION = 10000000;
 
 class Operations {
@@ -16,9 +17,10 @@ class Operations {
   #pipeline;
 
   constructor (version, dims, opts) {
-    const { sharp, ...rest } = opts;
+    const { sharp, pageThreshold, ...rest } = opts;
     const Implementation = IIIFVersions[version];
     this.calculator = new Implementation.Calculator(dims[0], rest);
+    this.pageThreshold = typeof pageThreshold === 'number' ? pageThreshold : DEFAULT_PAGE_THRESHOLD;
 
     this.#pages = dims
       .map((dim, page) => {
@@ -119,8 +121,8 @@ class Operations {
     const { fullSize } = this.info();
     const { page } = this.#pages.find((_candidate, index) => {
       const next = this.#pages[index + 1];
-      debug('comparing candidate %j to target %j', next, fullSize);
-      return !next || (next.width < fullSize.width && next.height < fullSize.height);
+      debug('comparing candidate %j to target %j with a %d-pixel buffer', next, fullSize, this.pageThreshold);
+      return !next || (next.width + this.pageThreshold < fullSize.width && next.height + this.pageThreshold < fullSize.height);
     });
 
     const resolution = this.#pages[page];

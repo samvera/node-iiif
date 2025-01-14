@@ -88,6 +88,17 @@ describe('size', () => {
     pipeline = await subject.operations(await subject.dimensions()).pipeline();
     assert.strictEqual(pipeline.options.input.page, 1);
   });
+
+  it('should respect the pixel page buffer', async () => {
+    let pipeline;
+    subject = new Processor(`${base}/full/312,165/0/default.png`, streamResolver);
+    pipeline = await subject.operations(await subject.dimensions()).pipeline();
+    assert.strictEqual(pipeline.options.input.page, 1);
+
+    subject = new Processor(`${base}/full/312,165/0/default.png`, streamResolver, { pageThreshold: 0 });
+    pipeline = await subject.operations(await subject.dimensions()).pipeline();
+    assert.strictEqual(pipeline.options.input.page, 0);
+  });
 });
 
 describe('rotation', () => {
@@ -144,5 +155,23 @@ describe('Two-argument streamResolver', () => {
     assert.strictEqual(size.width, 25);
     assert.strictEqual(size.height, 25);
     assert.strictEqual(size.format, 'png');
+  });
+});
+
+describe('Debug border', () => {
+  it('should produce an image without a border by default', async () => {
+    subject = new Processor(`${base}/full/full/0/default.png`, streamResolver);
+    const result = await subject.execute();
+    const image = await Sharp(result.body).removeAlpha().raw().toBuffer();
+    const pixel = image.readUInt32LE(0);
+    assert.strictEqual(pixel, 0xffffffff);
+  });
+
+  it('should add a border when `debugBorder` is specified', async () => {
+    subject = new Processor(`${base}/full/full/0/default.png`, streamResolver, { debugBorder: true });
+    const result = await subject.execute();
+    const image = await Sharp(result.body).removeAlpha().raw().toBuffer();
+    const pixel = image.readUInt32LE(0);
+    assert.strictEqual(pixel, 0xff0000ff);
   });
 });
