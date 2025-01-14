@@ -1,4 +1,5 @@
 const debug = require('debug')('iiif-processor:main');
+const debugv = require('debug')('verbose:iiif-processor');
 const mime = require('mime-types');
 const path = require('path');
 const sharp = require('sharp');
@@ -51,6 +52,8 @@ class Processor {
     this.includeMetadata = !!opts.includeMetadata;
     this.density = opts.density;
     this.baseUrl = opts.prefix;
+    this.debugBorder = !!opts.debugBorder;
+    this.pageThreshold = opts.pageThreshold;
     this.sharpOptions = { ...opts.sharpOptions };
     this.version = opts.iiifVersion;
     this.request = opts.request;
@@ -147,8 +150,9 @@ class Processor {
   }
 
   operations (dim) {
-    const { sharpOptions: sharp, max } = this;
-    return new Operations(this.version, dim, { sharp, max })
+    const { sharpOptions: sharp, max, pageThreshold } = this;
+    debug('pageThreshold: %d', pageThreshold);
+    return new Operations(this.version, dim, { sharp, max, pageThreshold })
       .region(this.region)
       .size(this.size)
       .rotation(this.rotation)
@@ -157,14 +161,39 @@ class Processor {
       .withMetadata(this.includeMetadata);
   }
 
+  async applyBorder (transformed) {
+    const buf = await transformed.toBuffer();
+    const borderPipe = sharp(buf, { limitInputPixels: false })
+    const { width, height } = await borderPipe.metadata();
+    const background = { r: 255, g: 0, b: 0, alpha: 1 };
+
+    // Create small images for each border “strip”
+    const topBorder = { create: { width, height: 1, channels: 4, background } };
+    const bottomBorder = { create: { width, height: 1, channels: 4, background } };
+    const leftBorder = { create: { width: 1, height, channels: 4, background } };
+    const rightBorder = { create: { width: 1, height, channels: 4, background } };
+
+    return borderPipe.composite([
+      { input: topBorder, left: 0, top: 0 },
+      { input: bottomBorder, left: 0, top: height - 1 },
+      { input: leftBorder, left: 0, top: 0 },
+      { input: rightBorder, left: width - 1, top: 0 }
+    ]);
+  }
+
   async iiifImage () {
+    debugv('Request %s', this.request);
     const dim = await this.dimensions();
     const operations = this.operations(dim);
+    debugv('Operations: %j', operations);
     const pipeline = await operations.pipeline();
 
     const result = await this.withStream({ id: this.id, baseUrl: this.baseUrl }, async (stream) => {
       debug('piping stream to pipeline');
-      const transformed = await stream.pipe(pipeline);
+      let transformed = await stream.pipe(pipeline);
+      if (this.debugBorder) {
+        transformed = await this.applyBorder(transformed);
+      }
       debug('converting to buffer');
       return await transformed.toBuffer();
     });

@@ -30,9 +30,11 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
     * `height` (integer) - the maximum pixel height of the returned image
     * `area` (integer) - the maximum total number of pixels in the returned image
   * `includeMetadata` (boolean) – if `true`, all metadata from the source image will be copied to the result
+  * `debugBorder` (boolean) – if `true`, add a 1px red border to every generated image (for tile debugging)
   * `density` (integer) – the pixel density to be included in the result image in pixels per inch
     * This has no effect whatsoever on the size of the image that gets returned; it's simply for convenience when using
       the resulting image in software that calculates a default print size based on the height, width, and density
+  * `pageThreshold` (integer) – the fudge factor (in number of pixels) to mitigate rounding errors in pyramid page selection (default: `1`)
   * `pathPrefix` (string) – the template used to extract the IIIF version and API parameters from the URL path (default: `/iiif/{{version}}/`) ([see below](#path-prefix))
   * `version` (number) – the major version (`2` or `3`) of the IIIF Image API to use (default: inferred from `/iiif/{version}/`)
 
