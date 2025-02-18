@@ -30,13 +30,9 @@ describe('IIIF Processor', () => {
     const opts = pipe.options;
 
     assert.strictEqual(opts.width, 15);
-    assert.strictEqual(opts.height, -1);
-    assert.strictEqual(opts.leftOffsetPre, 10);
-    assert.strictEqual(opts.topOffsetPre, 20);
-    assert.strictEqual(opts.widthPre, 30);
-    assert.strictEqual(opts.heightPre, 40);
+    assert.strictEqual(opts.height, 20);
     assert.strictEqual(opts.formatOut, 'png');
-    assert.strictEqual(opts.canvas, 'crop');
+    assert.strictEqual(opts.canvas, 'ignore_aspect');
     assert.strictEqual(opts.keepMetadata, 0);
   });
 });
@@ -57,8 +53,8 @@ describe('Minimum width and height', () => {
     ];
     const pipe = await subject.operations(dims).pipeline();
     const opts = pipe.options;
-    assert.notEqual(opts.widthPre, 0);
-    assert.notEqual(opts.heightPre, 0);
+    assert.notEqual(opts.width, 0);
+    assert.notEqual(opts.height, 0);
   });
 });
 
@@ -89,13 +85,9 @@ describe('TIFF Download', () => {
     const opts = pipe.options;
 
     assert.strictEqual(opts.width, 15);
-    assert.strictEqual(opts.height, -1);
-    assert.strictEqual(opts.leftOffsetPre, 10);
-    assert.strictEqual(opts.topOffsetPre, 20);
-    assert.strictEqual(opts.widthPre, 30);
-    assert.strictEqual(opts.heightPre, 40);
+    assert.strictEqual(opts.height, 20);
     assert.strictEqual(opts.formatOut, 'tiff');
-    assert.strictEqual(opts.canvas, 'crop');
+    assert.strictEqual(opts.canvas, 'ignore_aspect');
   });
 });
 

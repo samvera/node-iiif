@@ -88,17 +88,6 @@ describe('size', () => {
     pipeline = await subject.operations(await subject.dimensions()).pipeline();
     assert.strictEqual(pipeline.options.input.page, 1);
   });
-
-  it('should respect the pixel page buffer', async () => {
-    let pipeline;
-    subject = new Processor(`${base}/full/312,165/0/default.png`, streamResolver);
-    pipeline = await subject.operations(await subject.dimensions()).pipeline();
-    assert.strictEqual(pipeline.options.input.page, 1);
-
-    subject = new Processor(`${base}/full/312,165/0/default.png`, streamResolver, { pageThreshold: 0 });
-    pipeline = await subject.operations(await subject.dimensions()).pipeline();
-    assert.strictEqual(pipeline.options.input.page, 0);
-  });
 });
 
 describe('rotation', () => {

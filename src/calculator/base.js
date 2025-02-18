@@ -110,10 +110,10 @@ class Base {
     let isMax = false;
 
     if (['full', 'max'].includes(v)) {
-      this._setSize(this.dims);
+      this._setSize(this._parsedInfo.region);
       isMax = true;
     } else if (pct) {
-      this._setSize(sizePct(pct.groups.val, this.dims));
+      this._setSize(sizePct(pct.groups.val, this._parsedInfo.region));
     } else {
       this._setSize(sizeWH(v));
     }
@@ -206,24 +206,24 @@ function minNum (...args) {
 }
 
 function fullSize (dims, { region, size }) {
-  let scaleFactor;
-  if (size.width && size.height) {
-    scaleFactor = Math.min(
-      size.width / region.width,
-      size.height / region.height
-    );
-  } else if (size.width) {
-    scaleFactor = size.width / region.width;
-  } else if (size.height) {
-    scaleFactor = size.height / region.height;
-  } else {
+  const regionAspect = region.width / region.height;
+
+  if (!size.width && !size.height) {
     throw new IIIFError('Must specify at least one of width or height', { statusCode: 400 });
   }
 
-  return {
+  if (!size.height) size.height = Math.floor(size.width / regionAspect);
+  if (!size.width) size.width = Math.floor(size.height * regionAspect);
+
+  const scaleFactor = size.width / region.width;
+  const result = {
     width: Math.floor(dims.width * scaleFactor),
     height: Math.floor(dims.height * scaleFactor)
   };
+
+  debug('Region %j at size %j yields full size %j, a scale factor of %f', region, size, result, scaleFactor);
+
+  return result;
 }
 
 function regionSquare (dims) {
@@ -275,7 +275,7 @@ function sizePct (v, dims) {
 }
 
 function sizeWH (v) {
-  const result = { fit: 'cover' };
+  const result = { fit: 'fill' };
   if (typeof v === 'string') {
     if (v[0] === '!') {
       result.fit = 'inside';

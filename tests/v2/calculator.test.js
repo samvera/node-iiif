@@ -74,7 +74,7 @@ describe('Calculator', () => {
   it('info with pct:region', () => {
     const expected = {
       region: { left: 512, top: 384, width: 256, height: 192 },
-      size: { fit: 'cover', width: 512, height: 384 },
+      size: { fit: 'fill', width: 512, height: 384 },
       rotation: { flop: false, degree: 45 },
       quality: 'default',
       format: { type: 'jpg', density: 600 },
@@ -89,7 +89,7 @@ describe('Calculator', () => {
   it('info with pixel region', () => {
     const expected = {
       region: { left: 1014, top: 512, width: 10, height: 256 },
-      size: { fit: 'cover', width: 5, height: null },
+      size: { fit: 'fill', width: 5, height: 128 },
       rotation: { flop: false, degree: 0 },
       quality: 'default',
       format: { type: 'jpg', density: 600 },
