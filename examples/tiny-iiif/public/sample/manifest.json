@@ -1,0 +1,200 @@
+{
+  "@context": "http://iiif.io/api/presentation/2/context.json",
+  "@id": "http://localhost:3000/sample/manifest.json",
+  "@type": "sc:Manifest",
+  "label": "node-iiif samples",
+  "description": [],
+  "metadata": [
+    {
+      "label": "Viewer",
+      "value": "<a href='https://samvera-labs.github.io/clover-iiif'>Clover IIIF</a>"
+    },
+    { 
+      "label": "Images", 
+      "value": "<p><span>Paris Street; Rainy Day</span>, 1877</p>\n<p>Gustave Caillebotte (French, 1848–1894)</p>\n<p>Digital image courtesy of the Art Institute of Chicago <a href=\"https://www.artic.edu/artworks/20684\">&#x1f517;</a></p>\n"
+    },
+    { 
+      "label": "", 
+      "value": "<p><span>Mrs. Hugh Morgan and Her Daughter</span>, c. 1771</p>\n<p>Angelica Kauffmann (Swiss, 1741–1807)</p>\n<p>Digital image courtesy of the Art Institute of Chicago <a href=\"https://www.artic.edu/artworks/12658\">&#x1f517;</a></p>\n"
+    },
+    { 
+      "label": "", 
+      "value": "<p><span>Under the Wave off Kanagawa (Kanagawa oki nami ura), also known as The Great Wave, from the series “Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)”</span>, 1830/33</p>\n<p>Katsushika Hokusai 葛飾 北斎 (Japanese, 1760-1849)</p>\n<p>Digital image courtesy of the Art Institute of Chicago <a href=\"https://www.artic.edu/artworks/89503\">&#x1f517;</a></p>\n"
+    },
+    { 
+      "label": "", 
+      "value": "<p><span>A Sunday on La Grande Jatte — 1884</span>, 1884–86, border added 1888–89</p>\n<p>Georges Seurat (French, 1859–1891)</p>\n<p>Digital image courtesy of the Art Institute of Chicago <a href=\"https://www.artic.edu/artworks/27992\">&#x1f517;</a></p>\n"
+    },
+    { 
+      "label": "", 
+      "value": "<p><span>Woman at Her Toilette</span>, 1875–80</p>\n<p>Berthe Morisot (French, 1841–1895)</p>\n<p>Digital image courtesy of the Art Institute of Chicago <a href=\"https://www.artic.edu/artworks/11723\">&#x1f517;</a></p>\n"
+    },
+    { 
+      "label": "", 
+      "value": "<p><span>Judith and Her Maidservant with the Head of Holofernes</span>, ca. 1623–25</p>\n<p>Artemisia Gentilesci (Italian, 1593–1653 (?))<p>Digital image courtesy of the Detroit Institute of Arts <a href=\"https://dia.org/collection/judith-and-her-maidservant-head-holofernes-45746\">&#x1f517;</a></p>\n"
+    }
+  ],
+  "sequences": [
+    {
+      "@type": "sc:Sequence",
+      "canvases": [
+        {
+          "@type": "sc:Canvas",
+          "@id": "http://localhost:3000/iiif/3/caillebotte",
+          "label": "Paris Street; Rainy Day",
+          "attribution": "Digital image courtesy of the Art Institute of Chicago",
+          "width": 9987,
+          "height": 7755,
+          "images": [
+            {
+              "@type": "oa:Annotation",
+              "motivation": "sc:painting",
+              "on": "http://localhost:3000/iiif/3/caillebotte",
+              "resource": {
+                "@type": "dctypes:Image",
+                "@id": "http://localhost:3000/iiif/3/caillebotte/full/max/0/default.jpg",
+                "width": 9987,
+                "height": 7755,
+                "service": {
+                  "@context": "http://iiif.io/api/image/3/context.json",
+                  "@id": "http://localhost:3000/iiif/3/caillebotte",
+                  "profile": "level2"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "@type": "sc:Canvas",
+          "@id": "http://localhost:3000/iiif/3/kauffmann",
+          "label": "Mrs. Hugh Morgan and Her Daughter",
+          "attribution": "Digital image courtesy of the Art Institute of Chicago",
+          "width": 6312,
+          "height": 5209,
+          "images": [
+            {
+              "@type": "oa:Annotation",
+              "motivation": "sc:painting",
+              "on": "http://localhost:3000/iiif/3/kauffmann",
+              "resource": {
+                "@type": "dctypes:Image",
+                "@id": "http://localhost:3000/iiif/3/kauffmann/full/max/0/default.jpg",
+                "width": 6312,
+                "height": 5209,
+                "service": {
+                  "@context": "http://iiif.io/api/image/3/context.json",
+                  "@id": "http://localhost:3000/iiif/3/kauffmann",
+                  "profile": "level2"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "@type": "sc:Canvas",
+          "@id": "http://localhost:3000/iiif/3/hokusai",
+          "label": "Under the Wave off Kanagawa (Kanagawa oki nami ura)",
+          "attribution": "Digital image courtesy of the Art Institute of Chicago",
+          "width": 6645,
+          "height": 4597,
+          "images": [
+            {
+              "@type": "oa:Annotation",
+              "motivation": "sc:painting",
+              "on": "http://localhost:3000/iiif/3/hokusai",
+              "resource": {
+                "@type": "dctypes:Image",
+                "@id": "http://localhost:3000/iiif/3/hokusai/full/max/0/default.jpg",
+                "width": 6645,
+                "height": 4597,
+                "service": {
+                  "@context": "http://iiif.io/api/image/3/context.json",
+                  "@id": "http://localhost:3000/iiif/3/hokusai",
+                  "profile": "level2"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "@type": "sc:Canvas",
+          "@id": "http://localhost:3000/iiif/3/seurat",
+          "label": "A Sunday on La Grande Jatte \u2014 1884",
+          "attribution": "Digital image courtesy of the Art Institute of Chicago",
+          "width": 9310,
+          "height": 6237,
+          "images": [
+            {
+              "@type": "oa:Annotation",
+              "motivation": "sc:painting",
+              "on": "http://localhost:3000/iiif/3/seurat",
+              "resource": {
+                "@type": "dctypes:Image",
+                "@id": "http://localhost:3000/iiif/3/seurat/full/max/0/default.jpg",
+                "width": 9310,
+                "height": 6237,
+                "service": {
+                  "@context": "http://iiif.io/api/image/3/context.json",
+                  "@id": "http://localhost:3000/iiif/3/seurat",
+                  "profile": "level2"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "@type": "sc:Canvas",
+          "@id": "http://localhost:3000/iiif/3/morisot",
+          "label": "Woman at Her Toilette",
+          "attribution": "Digital image courtesy of the Art Institute of Chicago",
+          "width": 4946,
+          "height": 3703,
+          "images": [
+            {
+              "@type": "oa:Annotation",
+              "motivation": "sc:painting",
+              "on": "http://localhost:3000/iiif/3/morisot",
+              "resource": {
+                "@type": "dctypes:Image",
+                "@id": "http://localhost:3000/iiif/3/morisot/full/max/0/default.jpg",
+                "width": 4946,
+                "height": 3703,
+                "service": {
+                  "@context": "http://iiif.io/api/image/3/context.json",
+                  "@id": "http://localhost:3000/iiif/3/morisot",
+                  "profile": "level2"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "@type": "sc:Canvas",
+          "@id": "http://localhost:3000/iiif/3/gentileschi",
+          "label": "Judith and Her Maidservant with the Head of Holofernes",
+          "attribution": "Digital image courtesy of the Detroit Institute of Arts",
+          "width": 4946,
+          "height": 3703,
+          "images": [
+            {
+              "@type": "oa:Annotation",
+              "motivation": "sc:painting",
+              "on": "http://localhost:3000/iiif/3/gentileschi",
+              "resource": {
+                "@type": "dctypes:Image",
+                "@id": "http://localhost:3000/iiif/3/gentileschi/full/max/0/default.jpg",
+                "width": 4946,
+                "height": 3703,
+                "service": {
+                  "@context": "http://iiif.io/api/image/3/context.json",
+                  "@id": "http://localhost:3000/iiif/3/gentileschi",
+                  "profile": "level2"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
