@@ -2,6 +2,10 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v5.2.0
+- Refactor pipeline creation to simplify scaling
+- Add Clover IIIF manifest viewer and sample manifest/images to tiny-iiif example
+
 ##### v5.1.0
 - Update `pathPrefix` constructor option to accept a `{{version}}` placeholder and RegExp elements (default: `/iiif/{{version}}/`)
 
