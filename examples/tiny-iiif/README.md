@@ -6,12 +6,19 @@ TinyIIIF is a small [tinyhttp](https://tinyhttp.v1rtl.site) implementation of a 
 
 ## Usage
 
+### With Built-In Manifest and Sample Images
+
 ```shell
-$ IIIF_IMAGE_PATH=/path/to/iiif/images node index.js
-Serving IIIF images from /path/to/iiif/images on http://localhost:3000
+$ npm run tiny-iiif
 ```
 
-### Environment Variables
+### With Your Own Images
+
+```shell
+$ IIIF_IMAGE_PATH=/path/to/iiif/images npm run tiny-iiif
+```
+
+#### Environment Variables
 
 - `IIIF_IMAGE_PATH`: The base path where images to be served are stored
 - `IMAGE_FILE_TEMPLATE`: The template string for translating an image ID into its path relative to `IIIF_IMAGE_PATH`. (Default: `{{id}}.tif`)

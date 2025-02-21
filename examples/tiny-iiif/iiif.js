@@ -20,7 +20,7 @@ function createRouter(version) {
       req.params.filename = "info.json";
     }
 
-    try {
+    // try {
       const iiifUrl = `${req.protocol}://${req.get("host")}${req.path}`;
       const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, { pathPrefix: iiifpathPrefix, debugBorder: !!process.env.DEBUG_IIIF_BORDER });
       const result = await iiifProcessor.execute();
@@ -29,10 +29,10 @@ function createRouter(version) {
         .set("Link", [`<${result.canonicalLink}>;rel="canonical"`, `<${result.profileLink}>;rel="profile"`])
         .status(200)
         .send(result.body);
-    } catch (err) {
-      const statusCode = err.statusCode || 502;
-      return res.status(statusCode).send(err.message);
-    }
+    // } catch (err) {
+    //   const statusCode = err.statusCode || 502;
+    //   return res.status(statusCode).send(err.message);
+    // }
   }
 
   const router = new App();
