@@ -66,6 +66,25 @@ describe('region', () => {
     subject = new Processor(`${base}/0,0,0,0/max/0/default.png`, streamResolver);
     assert.rejects(() => subject.execute(), IIIFError);
   });
+
+  it('constrains the region to the image bounds', async () => {
+    subject = new Processor(
+      `${base}/100,100,4000,4000/max/0/default.png`,
+      streamResolver
+    );
+    const result = await subject.execute();
+    const size = await Sharp(result.body).metadata();
+    assert.strictEqual(size.width, 521);
+    assert.strictEqual(size.height, 227);
+  });
+
+  it('raises an error if the region is invalid', async () => {
+    subject = new Processor(
+      `${base}/700,0,627,540/max/0/default.png`,
+      streamResolver
+    );
+    assert.rejects(() => subject.execute(), IIIFError);
+  });
 });
 
 describe('size', () => {
