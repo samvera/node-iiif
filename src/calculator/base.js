@@ -100,6 +100,7 @@ class Base {
       this._parsedInfo.region = regionXYWH(v);
     }
     this._canonicalInfo.region = isFull ? 'full' : this._parsedInfo.region;
+    this._constrainRegion();
     return this;
   }
 
@@ -197,6 +198,18 @@ class Base {
     const { width, height } = this._parsedInfo.size;
     const result = (width?.toString() || '') + ',' + (height?.toString() || '');
     return this._parsedInfo.size.fit === 'inside' ? `!${result}` : result;
+  }
+
+  _constrainRegion () {
+    let { left, top, width, height } = this._parsedInfo.region;
+    left = Math.max(left, 0);
+    top = Math.max(top, 0);
+    if (left > this.dims.width || top > this.dims.height) {
+      throw new IIIFError('Region is out of bounds', { statusCode: 400 });
+    }
+    width = Math.min(width, this.dims.width - left);
+    height = Math.min(height, this.dims.height - top);
+    this._parsedInfo.region = { left, top, width, height };
   }
 }
 
