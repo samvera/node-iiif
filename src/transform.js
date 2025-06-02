@@ -3,7 +3,7 @@ const debug = require('debug')('iiif-processor:transform');
 const IIIFVersions = require('./versions');
 
 const DEFAULT_PAGE_THRESHOLD = 1;
-const SCALE_PRECISION = 1000;
+const SCALE_PRECISION = 10000000;
 
 class Operations {
   #keepMetadata;

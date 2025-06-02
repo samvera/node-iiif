@@ -13,10 +13,21 @@ const setHeaders = (res) => {
   res.setHeader('Access-Control-Allow-Credentials', 'false');
 }
 
+const decodePath = (req, _res, next) => {
+  if (req.path) {
+    req.path = decodeURIComponent(req.path);
+  }
+  if (req.originalUrl) {
+    req.originalUrl = decodeURIComponent(req.originalUrl);
+  }
+  next();
+}
+
 const app = new App({ settings: { networkExtensions: true } });
 
 app
-  .use(logger())
+  .use(decodePath)
+  .use(logger({emoji: true}))
   .use('/iiif/2', IIIFRouter(2))
   .use('/iiif/3', IIIFRouter(3))
   .use('/openseadragon', serveStatic('./node_modules/openseadragon/build/openseadragon'))
