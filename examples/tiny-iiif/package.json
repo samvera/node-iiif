@@ -1,6 +1,6 @@
 {
   "name": "tiny-iiif",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "description": "Example server for node-iiif using @tinyhttp",
   "type": "module",
   "main": "index.js",
