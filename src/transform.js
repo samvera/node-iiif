@@ -87,12 +87,11 @@ class Operations {
     const pipeline = Sharp({ limitInputPixels: false, ...this.#sharp });
     const { page, scale } = this.#computePage();
     pipeline.options.input.page = page;
-
     // Set Region
     const { format, quality, region, rotation: { flop, degree }, size } = this.info();
     scaleRegion(region, scale, this.#pages[page]);
 
-    pipeline.extract(region).resize(size);
+    pipeline.autoOrient().extract(region).resize(size);
 
     flop && pipeline.flop();
     pipeline.rotate(degree);
