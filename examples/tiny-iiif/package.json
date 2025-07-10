@@ -1,6 +1,6 @@
 {
   "name": "tiny-iiif",
-  "version": "5.2.3",
+  "version": "5.2.2",
   "description": "Example server for node-iiif using @tinyhttp",
   "type": "module",
   "main": "index.js",
@@ -33,7 +33,7 @@
     "iiif-processor": "../..",
     "openseadragon": "^5.0.1",
     "serve-static": "^1.16.2",
-    "sharp": "^0.34.3"
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "eslint": "^7.10.0",
