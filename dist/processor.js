@@ -130,6 +130,7 @@ class Processor {
             sizes.push({ width: size[0], height: size[1] });
         }
         const uri = new URL(this.baseUrl);
+        // Node's URL has readonly pathname in types; construct via join on new URL
         uri.pathname = path_1.default.join(uri.pathname, this.id);
         const id = uri.toString();
         const doc = this.Implementation.infoDoc({ id, ...dim, sizes, max: this.max });
@@ -141,14 +142,15 @@ class Processor {
         return { contentType: 'application/json', body };
     }
     operations(dim) {
-        const { sharpOptions: sharpOpt, max, pageThreshold } = this;
+        const sharpOpt = this.sharpOptions;
+        const { max, pageThreshold } = this;
         debug('pageThreshold: %d', pageThreshold);
         return new transform_1.Operations(this.version, dim, { sharp: sharpOpt, max, pageThreshold })
             .region(this.region)
             .size(this.size)
             .rotation(this.rotation)
             .quality(this.quality)
-            .format(this.format, this.density)
+            .format(this.format, this.density ?? undefined)
             .withMetadata(this.includeMetadata);
     }
     async applyBorder(transformed) {

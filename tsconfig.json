@@ -9,7 +9,7 @@
     "strict": false,
     "resolveJsonModule": true,
     "types": ["jest", "node"],
-    "typeRoots": ["types"],
+    "typeRoots": ["types", "node_modules/@types"],
     "rootDir": "."
   },
   "include": [

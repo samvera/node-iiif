@@ -11,7 +11,7 @@ import values from '../fixtures/iiif-values';
 const { v2: { qualities, formats, regions, sizes, rotations } } = values as any;
 
 const base = 'https://example.org/iiif/2/ab/cd/ef/gh/i';
-const streamResolver: any = () => fs.createReadStream('./tests/fixtures/samvera.tif');
+const streamResolver: any = async () => fs.createReadStream('./tests/fixtures/samvera.tif');
 let subject;
 let consoleWarnMock;
 
@@ -157,8 +157,8 @@ describe('Two-argument streamResolver', () => {
   beforeEach(() => {
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.png`,
-      ({id, baseUrl}, callback) => { 
-        const stream = streamResolver({id, baseUrl});
+      async ({id, baseUrl}, callback) => { 
+        const stream = await streamResolver({id, baseUrl});
         return callback(stream); 
       }
     );

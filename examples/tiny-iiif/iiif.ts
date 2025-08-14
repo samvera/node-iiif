@@ -5,7 +5,7 @@ import path from 'path';
 import { iiifImagePath, iiifpathPrefix, fileTemplate } from './config';
 
 function createRouter(version: number) {
-  const streamImageFromFile = ({ id }: { id: string }) => {
+  const streamImageFromFile = async ({ id }: { id: string }) => {
     const filename = fileTemplate.replace(/\{\{id\}\}/, id);
     const file = path.join(iiifImagePath, filename);
     if (!fs.existsSync(file)) {
@@ -41,7 +41,7 @@ function createRouter(version: number) {
     next();
   });
 
-  router.options(/^.*$/, (_req, res) => { res.status(204).send(''); });
+  router.options('*', (_req, res) => { res.status(204).send(''); });
   router.get('/', (_req, res) => res.status(200).send(`IIIF v${version}.x endpoint OK`));
   router.get('/:id', render);
   router.get('/:id/info.json', render);
@@ -51,4 +51,3 @@ function createRouter(version: number) {
 }
 
 export default createRouter;
-

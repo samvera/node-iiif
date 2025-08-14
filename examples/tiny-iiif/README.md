@@ -52,3 +52,23 @@ services:
     environment:
       IMAGE_FILE_TEMPLATE: "{{id}}.pyramid.tif"
 ```
+
+## Resolver Migration (Promise-only)
+
+As of the current Unreleased changes, the `streamResolver` must be an async function that returns a `Promise<Readable>`.
+
+- Old (sync):
+  ```js
+  function streamResolver({ id }) {
+    return fs.createReadStream(pathFor(id));
+  }
+  ```
+- New (async):
+  ```js
+  async function streamResolver({ id }) {
+    return fs.createReadStream(pathFor(id));
+  }
+  // or: ({ id }) => Promise.resolve(fs.createReadStream(pathFor(id)))
+  ```
+
+The two-argument callback form is still supported for now, but is deprecated. Prefer the promise-based resolver.

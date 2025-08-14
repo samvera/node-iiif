@@ -108,9 +108,10 @@ function setFormat(pipeline, format) {
     }
 }
 function scaleRegion(region, scale, page) {
-    for (const dim in region) {
-        region[dim] = Math.floor(region[dim] * scale);
-    }
+    region.left = Math.floor(region.left * scale);
+    region.top = Math.floor(region.top * scale);
+    region.width = Math.floor(region.width * scale);
+    region.height = Math.floor(region.height * scale);
     region.left = Math.max(region.left, 0);
     region.top = Math.max(region.top, 0);
     region.width = Math.min(region.width, page.width);

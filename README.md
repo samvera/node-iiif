@@ -22,7 +22,7 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
 ```
 
 * `url` (string, required) - the URL of the IIIF resource to process
-* `streamResolver` (function, required) – a callback function that returns a readable image stream for a given request ([see below](#stream-resolver))
+* `streamResolver` (async function, required) – returns a Promise of a readable image stream for a given request ([see below](#stream-resolver)); the legacy two-argument callback form is deprecated
 * `opts`:
   * `dimensionFunction` (function) – a callback function that returns the image dimensions for a given request ([see below](#dimension-function))
   * `max` (object) – optional maximum size constraints of an image that can be returned
@@ -46,14 +46,14 @@ See the [TinyIIIF](./examples/tiny-iiif/README.md) example.
 
 ### Stream Resolver
 
-The calling function must supply the processor with a Stream Resolver callback
-function, which takes information about the request [(`id` and `baseUrl`)](#id--baseurl) and returns an open
-[Readable Stream](https://nodejs.org/api/stream.html#stream_class_stream_readable) from which the source image can be read.
+The calling function must supply the processor with a Stream Resolver that returns a
+Promise of an open [Readable Stream](https://nodejs.org/api/stream.html#stream_class_stream_readable).
+It receives information about the request [(`id` and `baseUrl`)](#id--baseurl).
 
 #### Pairtree File Source
 
 ```javascript
-function streamResolver({ id, baseUrl }) {
+async function streamResolver({ id, baseUrl }) {
   let imagePath = '/path/to/image/root/' + id.match(/.{1,2}/g).join('/') + '/image.tif';
   return fs.createReadStream(imagePath);
 }
@@ -88,6 +88,10 @@ async function streamResolver({ id, baseUrl }, callback) {
   }
 }
 ```
+
+Note: The two-argument callback form is still supported but deprecated; prefer the
+promise-based resolver shown above. If you currently return a stream synchronously,
+wrap it with `Promise.resolve()` or mark your function `async`.
 
 ### Dimension Function
 

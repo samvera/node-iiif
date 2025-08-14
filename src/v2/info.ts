@@ -1,6 +1,7 @@
 import { Formats, Qualities } from '../calculator/v2';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Debug from 'debug';
+import type { InfoDocInput, InfoDoc } from '../contracts';
 const profileLink = 'http://iiif.io/api/image/2/level2.json';
 
 const IIIFProfile = {
@@ -30,7 +31,7 @@ const IIIFProfile = {
   ])
 };
 
-export function infoDoc ({ id, width, height, sizes, max }: any) {
+export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoDoc {
   const maxAttrs = {
     maxWidth: max?.width,
     maxHeight: max?.height,

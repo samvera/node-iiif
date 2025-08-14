@@ -1,6 +1,8 @@
 import Sharp, { Sharp as SharpType } from 'sharp';
 import Debug from 'debug';
 import { Versions } from './versions';
+import type { VersionModule, CalculatorLike } from './contracts';
+import type { Dimensions, BoundingBox, Format } from './types';
 
 const debug = Debug('iiif-processor:transform');
 
@@ -13,12 +15,12 @@ export class Operations {
   private keepMetadata?: boolean;
   private pages: PageDim[];
   private sharpOptions?: Record<string, unknown>;
-  private calculator: any;
+  private calculator: CalculatorLike;
   private pageThreshold: number;
 
-  constructor (version: number, dims: Array<{ width: number; height: number }>, opts: any) {
+  constructor (version: number, dims: Dimensions[], opts: any) {
     const { sharp, pageThreshold, ...rest } = opts || {};
-    const Implementation: any = (Versions as any)[version];
+    const Implementation: VersionModule = (Versions as any)[version];
     this.calculator = new Implementation.Calculator(dims[0], rest);
     this.pageThreshold = typeof pageThreshold === 'number' ? pageThreshold : DEFAULT_PAGE_THRESHOLD;
 
@@ -101,7 +103,7 @@ export class Operations {
   }
 }
 
-function setFormat (pipeline: SharpType, format: any) {
+function setFormat (pipeline: SharpType, format: { type: Format; density?: number }) {
   let pipelineFormat: string;
   const pipelineOptions: any = {};
 
@@ -125,10 +127,11 @@ function setFormat (pipeline: SharpType, format: any) {
   }
 }
 
-function scaleRegion (region: any, scale: number, page: { width: number; height: number }) {
-  for (const dim in region) {
-    region[dim] = Math.floor(region[dim] * scale);
-  }
+function scaleRegion (region: BoundingBox, scale: number, page: { width: number; height: number }) {
+  region.left = Math.floor(region.left * scale);
+  region.top = Math.floor(region.top * scale);
+  region.width = Math.floor(region.width * scale);
+  region.height = Math.floor(region.height * scale);
   region.left = Math.max(region.left, 0);
   region.top = Math.max(region.top, 0);
   region.width = Math.min(region.width, page.width);

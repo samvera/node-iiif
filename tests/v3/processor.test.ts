@@ -10,7 +10,7 @@ import { Processor } from '../../src/processor';
 let subject;
 const base = 'https://example.org/iiif/3/ab/cd/ef/gh/i';
 const dims = [{ width: 1024, height: 768 }];
-const identityResolver = ({ id }) => id;
+const identityResolver = async (_input) => new Stream.Readable({ read () {} });
 
 describe('IIIF Processor', () => {
   beforeEach(() => {
@@ -101,7 +101,7 @@ describe('Density', () => {
     subject = (ext) => {
       return new Processor(
         `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.${ext}`,
-        ({ id }) => id,
+        async () => new Stream.Readable({ read () {} }),
         { density: 600 }
       );
     };
@@ -142,11 +142,11 @@ describe('constructor', () => {
     }
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
-      () => 'streamResolver',
+      async () => new Stream.Readable({ read () {} }),
       { dimensionFunction: () => 'dimensionFunction', max, includeMetadata: true, density: 600 }
     );
 
-    assert.strictEqual(subject.streamResolver(), 'streamResolver');
+    assert.equal(typeof subject.streamResolver, 'function');
     assert.strictEqual(subject.dimensionFunction(), 'dimensionFunction');
     assert.strictEqual(subject.max.width, 'maxWidth');
     assert.strictEqual(subject.max.height, 'maxHeight');
@@ -159,7 +159,7 @@ describe('constructor', () => {
     assert.throws(() => 
       new Processor(
         `${base}/10,20,30,40/pct:50/45/default.tif`,
-        () => 'streamResolver',
+        async () => new Stream.Readable({ read () {} }),
         { dimensionFunction: () => 'dimensionFunction', max: { height: 400 }, includeMetadata: true, density: 600 }
       ),
       IIIFError
@@ -171,7 +171,7 @@ describe('constructor', () => {
     
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
-      () => 'streamResolver',
+      async () => new Stream.Readable({ read () {} }),
       { sharpOptions: { sequentialRead: false } }
     );
     pipe = await subject.operations(dims).pipeline();
@@ -179,7 +179,7 @@ describe('constructor', () => {
     
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
-      () => 'streamResolver',
+      async () => new Stream.Readable({ read () {} }),
       { sharpOptions: { sequentialRead: true } }
     );
     pipe = await subject.operations(dims).pipeline();
@@ -190,7 +190,7 @@ describe('constructor', () => {
 describe('constructor errors', () => {
   it('requires a streamResolver', () => {
     assert.throws(() => {
-      return new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, {});
+      return new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, {} as any);
     }, IIIFError);
   });
 
@@ -205,7 +205,7 @@ describe('stream processor', () => {
   it('passes the id and baseUrl to the function', () => {
     expect.assertions(2) // ensures our streamResolver assertions are both executed in this test
 
-    const streamResolver = ({ id, baseUrl }) => {
+    const streamResolver = async ({ id, baseUrl }) => {
       expect(id).toEqual('i');
       expect(baseUrl).toEqual('https://example.org/iiif/3/ab/cd/ef/gh/');
 
@@ -223,7 +223,7 @@ describe('dimension function', () => {
   it('passes the id and baseUrl to the function', () => {
     expect.assertions(2) // ensures our dimension function assertions are both executed in this test
 
-    const streamResolver = ({ id, baseUrl }) => {
+    const streamResolver = async ({ id, baseUrl }) => {
       return new Stream.Readable({
         read() {}
       });
@@ -237,7 +237,7 @@ describe('dimension function', () => {
 
     const subject = new Processor(
       `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
-      streamResolver,
+      streamResolver as any,
       { dimensionFunction, pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' }
     );
     subject.execute();

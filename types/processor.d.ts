@@ -20,6 +20,10 @@ export type StreamResolver = (
   input: { id: string, baseUrl: string }
 ) => Promise<NodeJS.ReadableStream>;
 
+/**
+ * @deprecated Use the Promise-based `StreamResolver` instead. This callback form
+ *             will be removed in a future major version.
+ */
 export type StreamResolverWithCallback = (
   input: { id: string, baseUrl: string },
   callback: (result: NodeJS.ReadableStream) => Promise<unknown>
@@ -36,6 +40,9 @@ export declare class Processor {
       density?: number;
       pathPrefix?: string;
       iiifVersion?: 2 | 3;
+      debugBorder?: boolean;
+      pageThreshold?: number;
+      sharpOptions?: Record<string, unknown>;
     }
   );
 

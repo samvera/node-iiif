@@ -19,6 +19,8 @@
   "scripts": {
     "clean": "rm -rf node_modules/ vendor/ coverage/ dist/",
     "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit",
     "build:watch": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "prepare": "npm run build",
     "lint": "eslint \"{src,tests}/**/*.{js,ts}\"",

@@ -57,7 +57,7 @@ class Base {
         };
         this._parsedInfo = {
             region: { left: 0, top: 0, ...dims },
-            size: { ...dims },
+            size: { width: dims.width, height: dims.height, fit: 'fill' },
             rotation: { flop: false, degree: 0 },
             quality: 'default',
             format: { type: 'jpg' },
@@ -69,7 +69,7 @@ class Base {
             return validateDensity(v);
         const re = new RegExp(`^${this.constructor._validator(type)}$`);
         debug('validating %s %s against %s', type, v, re);
-        if (!re.test(v)) {
+        if (!re.test(String(v))) {
             throw new error_1.IIIFError(`Invalid ${type}: ${v}`, { statusCode: 400 });
         }
         return true;
@@ -141,7 +141,9 @@ class Base {
     _setSize(v) {
         const max = { ...(this.opts?.max || {}) };
         max.height = max.height || max.width;
-        this._parsedInfo.size = { ...v };
+        this._parsedInfo.size = v.left !== undefined
+            ? { width: v.width, height: v.height, fit: 'fill' }
+            : { ...v };
         this._constrainSize(max);
         if (!this._parsedInfo.upscale) {
             this._constrainSize(this._sourceDims);
@@ -187,9 +189,9 @@ function fullSize(dims, { region, size }) {
     if (!size.width && !size.height) {
         throw new error_1.IIIFError('Must specify at least one of width or height', { statusCode: 400 });
     }
-    if (!size.height)
+    if (!size.height && size.width != null)
         size.height = Math.floor(size.width / regionAspect);
-    if (!size.width)
+    if (!size.width && size.height != null)
         size.width = Math.floor(size.height * regionAspect);
     const scaleFactor = size.width / region.width;
     const result = { width: Math.floor(dims.width * scaleFactor), height: Math.floor(dims.height * scaleFactor) };
@@ -197,7 +199,7 @@ function fullSize(dims, { region, size }) {
     return result;
 }
 function regionSquare(dims) {
-    let result = { left: 0, top: 0, ...dims };
+    let result = { left: 0, top: 0, width: dims.width, height: dims.height };
     if (dims.width !== dims.height) {
         const side = Math.min(dims.width, dims.height);
         result = { ...result, width: side, height: side };
@@ -221,10 +223,8 @@ function regionPct(v, dims) {
     return regionXYWH([x, y, w, h]);
 }
 function regionXYWH(v) {
-    if (typeof v === 'string') {
-        v = v.split(/\s*,\s*/).map((val) => Number(val));
-    }
-    const result = { left: v[0], top: v[1], width: v[2], height: v[3] };
+    const parts = typeof v === 'string' ? v.split(/\s*,\s*/).map((val) => Number(val)) : v;
+    const result = { left: parts[0], top: parts[1], width: parts[2], height: parts[3] };
     if (result.width === 0 || result.height === 0) {
         throw new error_1.IIIFError('Region width and height must both be > 0', { statusCode: 400 });
     }
@@ -240,13 +240,18 @@ function sizePct(v, dims) {
 }
 function sizeWH(v) {
     const result = { fit: 'fill' };
+    let parts;
     if (typeof v === 'string') {
         if (v[0] === '!') {
             result.fit = 'inside';
+            v = v.slice(1);
         }
-        v = v.replace(/^!/, '').split(/\s*,\s*/).map((val) => (val === '' ? null : Number(val)));
+        parts = v.split(/\s*,\s*/).map((val) => (val === '' ? null : Number(val)));
     }
-    [result.width, result.height] = v;
+    else {
+        parts = v;
+    }
+    [result.width, result.height] = parts;
     if (result.width === 0 || result.height === 0) {
         throw new error_1.IIIFError('Resize width and height must both be > 0', { statusCode: 400 });
     }
