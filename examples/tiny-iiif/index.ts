@@ -3,17 +3,17 @@
 import { App } from '@tinyhttp/app';
 import { logger } from '@tinyhttp/logger';
 import serveStatic from 'serve-static';
-import { port, iiifImagePath } from './config.js';
-import IIIFRouter from './iiif.js';
+import { port, iiifImagePath } from './config';
+import IIIFRouter from './iiif';
 
-const setHeaders = (res) => {
+const setHeaders = (res: any) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.setHeader('Access-Control-Allow-Credentials', 'false');
 }
 
-const decodePath = (req, _res, next) => {
+const decodePath = (req: any, _res: any, next: any) => {
   if (req.path) {
     req.path = decodeURIComponent(req.path);
   }

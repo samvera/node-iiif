@@ -1,14 +1,17 @@
+/// <reference types="jest" />
 'use strict';
 
-const assert = require('assert');
-const fs = require('fs');
-const Processor = require('../../src/processor');
-const IIIFError = require('../../src/error');
-const Sharp = require('sharp');
-const { v3: { qualities, formats, regions, sizes, rotations } } = require('../fixtures/iiif-values');
+import { describe, it, beforeEach, afterEach, jest } from '@jest/globals';
+import assert from 'assert';
+import fs from 'fs';
+import { Processor } from '../../src/processor';
+import { IIIFError } from '../../src/error';
+import Sharp from 'sharp';
+import values from '../fixtures/iiif-values';
+const { v3: { qualities, formats, regions, sizes, rotations } } = values as any;
 
 const base = 'https://example.org/iiif/3/ab/cd/ef/gh/i';
-const streamResolver = () => fs.createReadStream('./tests/fixtures/samvera.tif');
+const streamResolver: any = () => fs.createReadStream('./tests/fixtures/samvera.tif');
 let subject;
 let consoleWarnMock;
 
@@ -121,7 +124,7 @@ describe('rotation', () => {
 
 describe('IIIF transformation', () => {
   beforeEach(() => {
-    consoleWarnMock = jest.spyOn(global.console, 'warn').mockImplementation();
+    consoleWarnMock = jest.spyOn(global.console, 'warn').mockImplementation(() => undefined);
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.png`,
       streamResolver,

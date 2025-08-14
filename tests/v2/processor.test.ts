@@ -1,9 +1,11 @@
+/// <reference types="jest" />
 'use strict';
 
-const assert = require('assert');
-const { Stream } = require('stream');
-const IIIFError = require('../../src/error');
-const Processor = require('../../src/processor');
+import { describe, it, beforeEach, expect } from '@jest/globals';
+import assert from 'assert';
+import { Stream } from 'stream';
+import { IIIFError } from '../../src/error';
+import { Processor } from '../../src/processor';
 
 let subject;
 const base = 'https://example.org/iiif/2/ab/cd/ef/gh/i';
@@ -60,7 +62,7 @@ describe('Minimum width and height', () => {
 
 describe('Include metadata', () => {
   beforeEach(() => {
-    subject = new Processor( 
+    subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.jpg`,
       ({ id }) => id,
       { includeMetadata: true }
@@ -130,7 +132,7 @@ describe('Density', () => {
 
 describe('constructor', () => {
   it('must parse the object-based constructor', () => {
-    subject = new Processor( 
+    subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       () => 'streamResolver',
       { dimensionFunction: () => 'dimensionFunction', max: { width: 'maxWidth' }, includeMetadata: true, density: 600 }

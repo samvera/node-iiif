@@ -1,7 +1,8 @@
-const { Formats, Qualities } = require('../calculator/v2');
-const debug = require('debug')('iiif-processor:v2:info'); // eslint-disable-line no-unused-vars
-
+import { Formats, Qualities } from '../calculator/v2';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Debug from 'debug';
 const profileLink = 'http://iiif.io/api/image/2/level2.json';
+
 const IIIFProfile = {
   formats: new Set(Formats),
   qualities: new Set(Qualities),
@@ -29,12 +30,12 @@ const IIIFProfile = {
   ])
 };
 
-function infoDoc ({ id, width, height, sizes, max }) {
+export function infoDoc ({ id, width, height, sizes, max }: any) {
   const maxAttrs = {
     maxWidth: max?.width,
     maxHeight: max?.height,
     maxArea: max?.area
-  };
+  } as any;
 
   return {
     '@context': 'http://iiif.io/api/image/2/context.json',
@@ -44,10 +45,10 @@ function infoDoc ({ id, width, height, sizes, max }) {
     height,
     sizes,
     tiles: [
-      { width: 512, height: 512, scaleFactors: sizes.map((_v, i) => 2 ** i) }
+      { width: 512, height: 512, scaleFactors: sizes.map((_v: any, i: number) => 2 ** i) }
     ],
     profile: [profileLink, { ...IIIFProfile, ...maxAttrs }]
   };
 }
 
-module.exports = { infoDoc, profileLink };
+export { profileLink };

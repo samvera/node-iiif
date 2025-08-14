@@ -1,9 +1,11 @@
+/// <reference types="jest" />
 'use strict';
 
-const assert = require('assert');
-const { Stream } = require('stream');
-const IIIFError = require('../../src/error');
-const Processor = require('../../src/processor');
+import { describe, it, beforeEach, expect } from '@jest/globals';
+import assert from 'assert';
+import { Stream } from 'stream';
+import { IIIFError } from '../../src/error';
+import { Processor } from '../../src/processor';
 
 let subject;
 const base = 'https://example.org/iiif/3/ab/cd/ef/gh/i';
