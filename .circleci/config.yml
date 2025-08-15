@@ -1,15 +1,14 @@
 ---
 version: 2.1
 orbs:
-  node: circleci/node@5
+  node: circleci/node@7
 jobs:
   build:
     working_directory: ~/iiif-processor
     docker:
-      - image: cimg/base:stable
+      - image: cimg/node:20.19.4 # sync with .nvmrc
     steps:
       - checkout
-      - node/install
       - run:
           name: Check for 'master' branch
           command: |
@@ -19,23 +18,14 @@ jobs:
                   echo "$(git branch --all --list master */master)"
               fi
               [[ -z "$(git branch --all --list master */master)" ]]
-      - restore_cache:
-          keys:
-            - node-modules-v1-{{ checksum "package.json" }}-{{ .Branch }}
-            - node-modules-v1-{{ checksum "package.json" }}-
-            - node-modules-v1-
       - run:
           name:  Download cc-test-reporter
           command: |
             curl -L -o ./cc-test-reporter https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
             chmod +x ./cc-test-reporter
-      - run:
-          name: Install JS Dependencies
-          command: npm install
-      - save_cache:
-          key: node-modules-v1-{{ checksum "package.json" }}-{{ .Branch }}
-          paths:
-            - ~/iiif-processor/node_modules
+      - node/install-packages:
+          pkg-manager: npm
+          with-cache: true
       - run:
           name: JS Tests
           command: |
