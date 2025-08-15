@@ -39,9 +39,14 @@ jobs:
           name: JS Tests
           command: |
             ./cc-test-reporter before-build
-            npm run-script test -- --coverage
+            npm run test -- --ci --coverage --reporters=default --reporters=jest-junit
             mv coverage/clover.xml ./clover.xml
             ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+            JEST_JUNIT_ADD_FILE_ATTRIBUTE: "true"
+      - store_test_results:
+          path: ./reports/ # https://circleci.com/docs/guides/test/collect-test-data/#jest
       - run:
           name: Send coverage to Coveralls
           command: npx coveralls < coverage/lcov.info

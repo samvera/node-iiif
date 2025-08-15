@@ -43,8 +43,8 @@
     "mime-types": "2.x"
   },
   "devDependencies": {
-    "@types/node": "^20.14.11",
     "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.11",
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
     "coveralls": "^3.1.1",
@@ -55,6 +55,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.1.1",
     "jest": "^29.4.3",
+    "jest-junit": "^16.0.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
@@ -69,7 +70,10 @@
         "ts-jest",
         {
           "tsconfig": {
-            "types": ["jest", "node"]
+            "types": [
+              "jest",
+              "node"
+            ]
           }
         }
       ]
@@ -82,7 +86,11 @@
       "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"
     ],
     "testEnvironment": "node",
-    "moduleFileExtensions": ["ts", "js", "json"],
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
     "moduleDirectories": [
       "node_modules"
     ]
