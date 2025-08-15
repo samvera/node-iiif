@@ -9,9 +9,9 @@
 ## Build, Test, and Development Commands
 - `npm install`: Install dependencies (installs optional `sharp`).
 - `npm test`: Run Jest (watches locally; CI disables watch).
-- `npm test -- --coverage`: Generate coverage report in `coverage/`.
+- `npm test:coverage`: Generate coverage report in `coverage/`.
 - `npm run lint`: Lint `src/**/*.js` with ESLint (Standard config).
-- `npm run lint-fix`: Auto-fix lint issues where possible.
+- `npm run lint:fix`: Auto-fix lint issues where possible.
 - `npm run clean`: Remove `node_modules/`, `vendor/`, and `coverage/`.
 
 ## Coding Style & Naming Conventions
@@ -21,7 +21,7 @@
 
 ## Testing Guidelines
 - **Framework**: Jest; place tests under `tests/` mirroring `src/` structure; name files `*.test.js`.
-- **Running**: Use `npm test` for watch; add `--coverage` before pushing.
+- **Running**: Use `npm test` for watch; `npm test:coverage` before pushing.
 - **Expectations**: Maintain or improve coverage; include tests for new features and bug fixes; avoid network or external I/O—use fixtures/mocks. Debug test runs with `DEBUG=iiif-processor:*`.
 
 ## Commit & Pull Request Guidelines

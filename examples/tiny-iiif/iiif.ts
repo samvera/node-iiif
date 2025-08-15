@@ -4,34 +4,34 @@ import fs from 'fs';
 import path from 'path';
 import { iiifImagePath, iiifpathPrefix, fileTemplate } from './config';
 
-function createRouter(version: number) {
-  const streamImageFromFile = async ({ id }: { id: string }) => {
-    const filename = fileTemplate.replace(/\{\{id\}\}/, id);
-    const file = path.join(iiifImagePath, filename);
-    if (!fs.existsSync(file)) {
-      throw new IIIFError('Not Found', { statusCode: 404 });
-    }
-    return fs.createReadStream(file);
-  };
+const streamImageFromFile = async ({ id }: { id: string }) => {
+  const filename = fileTemplate.replace(/\{\{id\}\}/, id);
+  const file = path.join(iiifImagePath, filename);
+  if (!fs.existsSync(file)) {
+    throw new IIIFError('Not Found', { statusCode: 404 });
+  }
+  return fs.createReadStream(file);
+};
 
-  const render = async (req: any, res: any) => {
-    if (req.params && req.params.filename == null) {
-      req.params.filename = 'info.json';
-    }
+const render = async (req: any, res: any) => {
+  if (req.params && req.params.filename == null) {
+    req.params.filename = 'info.json';
+  }
 
-    const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
-    const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, {
-      pathPrefix: iiifpathPrefix,
-      debugBorder: !!process.env.DEBUG_IIIF_BORDER
-    });
-    const result = await iiifProcessor.execute();
-    return res
-      .set('Content-Type', result.contentType)
-      .set('Link', [`<${(result as any).canonicalLink}>;rel="canonical"`, `<${(result as any).profileLink}>;rel="profile"`])
-      .status(200)
-      .send(result.body);
-  };
+  const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
+  const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, {
+    pathPrefix: iiifpathPrefix,
+    debugBorder: !!process.env.DEBUG_IIIF_BORDER
+  });
+  const result = await iiifProcessor.execute();
+  return res
+    .set('Content-Type', result.contentType)
+    .set('Link', [`<${(result as any).canonicalLink}>;rel="canonical"`, `<${(result as any).profileLink}>;rel="profile"`])
+    .status(200)
+    .send(result.body);
+};
 
+function createRouter (version: number) {
   const router = new App();
 
   router.use((_req, res, next) => {
@@ -41,7 +41,9 @@ function createRouter(version: number) {
     next();
   });
 
-  router.options('*', (_req, res) => { res.status(204).send(''); });
+  router.options('*', (_req, res) => {
+    res.status(204).send('');
+  });
   router.get('/', (_req, res) => res.status(200).send(`IIIF v${version}.x endpoint OK`));
   router.get('/:id', render);
   router.get('/:id/info.json', render);

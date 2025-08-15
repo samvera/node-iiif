@@ -40,9 +40,10 @@
     "build:watch": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "prepare": "npm run build",
     "lint": "eslint \"{src,tests}/**/*.{js,ts}\"",
-    "lint-fix": "eslint --fix \"{src,tests}/**/*.{js,ts}\"",
+    "lint:fix": "eslint --fix \"{src,tests}/**/*.{js,ts}\"",
     "lint:examples": "cd examples/tiny-iiif && npm run lint",
-    "test": "node scripts/test.js --env=node"
+    "test": "node scripts/test.js --env=node",
+    "test:coverage": "node scripts/test.js --env=node --coverage"
   },
   "keywords": [
     "iiif",
