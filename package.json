@@ -16,6 +16,10 @@
     "package.json",
     "README.md"
   ],
+  "workspaces": [
+    "examples/tiny-iiif",
+    "examples/tiny-iiif/clover-ui"
+  ],
   "scripts": {
     "clean": "rm -rf node_modules/ vendor/ coverage/ dist/",
     "build": "tsc -p tsconfig.build.json",

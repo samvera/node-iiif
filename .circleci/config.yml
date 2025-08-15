@@ -2,11 +2,20 @@
 version: 2.1
 orbs:
   node: circleci/node@7
+executors:
+  node:
+    docker:
+      - image: cimg/node:20.19.4 # sync with .nvmrc
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - lint
 jobs:
   build:
     working_directory: ~/iiif-processor
-    docker:
-      - image: cimg/node:20.19.4 # sync with .nvmrc
+    executor: node
     steps:
       - checkout
       - run:
@@ -36,3 +45,17 @@ jobs:
       - run:
           name: Send coverage to Coveralls
           command: npx coveralls < coverage/lcov.info
+  lint:
+    working_directory: ~/iiif-processor
+    executor: node
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+          with-cache: true
+      - run:
+          name: Type Check
+          command: npm run typecheck
+      - run:
+          name: Lint
+          command: npm run lint
