@@ -16,10 +16,10 @@ npm install iiif-processor --save
 
 ## Usage
 
-```javascript
-const IIIF = require('iiif-processor');
+```typescript
+import { Processor } from "iiif-processor";
 
-const processor = new IIIF.Processor(url, streamResolver, opts);
+const processor = new Processor(url, streamResolver, opts);
 ```
 
 * `url` (string, required) - the URL of the IIIF resource to process
@@ -53,10 +53,10 @@ It receives information about the request [(`id` and `baseUrl`)](#id--baseurl).
 
 #### Pairtree File Source
 
-```javascript
+```typescript
 async function streamResolver({ id, baseUrl }) {
-  let imagePath = '/path/to/image/root/' + id.match(/.{1,2}/g).join('/') + '/image.tif';
-  return fs.createReadStream(imagePath);
+  let imagePath = "/path/to/image/root/" + id.match(/.{1,2}/g).join("/") + "/image.tif";
+  return createReadStream(imagePath);
 }
 ```
 
@@ -66,13 +66,13 @@ the function to do its own cleanup.
 
 #### Amazon S3 Bucket Source
 
-```javascript
-const { GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
+```typescript
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-async function streamResolver({ id, baseUrl }, callback) {
+async function streamResolver({ id, baseUrl }) {
   const s3 = new S3Client();
   const command = new GetObjectCommand({
-    Bucket: 'my-tiff-bucket',
+    Bucket: "my-tiff-bucket",
     Key: `${id}.tif`
   });
   const response = await s3.send(command);
@@ -82,11 +82,7 @@ async function streamResolver({ id, baseUrl }, callback) {
     throw new Error(`Could not fetch object from S3: ${id}`);
   }
 
-  try {
-    return callback ? await callback(stream) : stream;
-  } finally {
-    stream.destroy();
-  }
+  return stream;
 }
 ```
 
@@ -116,8 +112,8 @@ The function should return either:
 
 Providing the dimensions of all available pages allows the processor to choose the most efficient starting image for the size requested.
 
-```javascript
-async function dimensionFunction({ id, baseUrl }) {
+```typescript
+async function dimensionFunction({ id: string, baseUrl: string }): Promise<Dimensions | Dimensions[]> {
   let dimensions = lookDimensionsUpInDatabase(id);
   return { width: dimensions.width, height: dimensions.height };
 }
@@ -134,25 +130,24 @@ The `pathPrefix` constructor option provides a tremendous amount of flexibility 
 ### Processing
 
 #### Promise
-```javascript
-const IIIF = require('iiif-processor');
+```typescript
+import { Processor } from "iiif-processor";
 
-let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction });
+let url = "http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg"
+let processor = new Processor(url, streamResolver, { dimensionFunction });
 processor.execute()
   .then(result => handleResult(result))
   .catch(err => handleError(err));
 ```
 
 #### Async/Await
-```javascript
-const IIIF = require('iiif-processor');
+```typescript
+import { Processor } from "iiif-processor";
 
-let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction });
+let url = "http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg"
+let processor = new Processor(url, streamResolver, { dimensionFunction });
 try {
-  let result = await processor.execute();
-  return result;
+  return await processor.execute();
 } catch (err) {
   handleError(err);
 }

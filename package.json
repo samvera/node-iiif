@@ -97,6 +97,9 @@
       "./*.{js,ts}",
       "src/**/*.{js,ts}"
     ],
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/tsup.config.ts"
+    ],
     "testPathIgnorePatterns": [
       "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"
     ],
