@@ -1,39 +1,8 @@
-var __create = Object.create;
 var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// src/index.ts
-var index_exports = {};
-__export(index_exports, {
-  IIIFError: () => IIIFError,
-  Processor: () => Processor,
-  Versions: () => Versions
-});
-module.exports = __toCommonJS(index_exports);
 
 // src/error.ts
 var IIIFError = class extends Error {
@@ -44,14 +13,14 @@ var IIIFError = class extends Error {
 };
 
 // src/processor.ts
-var import_debug3 = __toESM(require("debug"));
-var import_mime_types = __toESM(require("mime-types"));
-var import_path = __toESM(require("path"));
-var import_sharp2 = __toESM(require("sharp"));
+import Debug3 from "debug";
+import mime from "mime-types";
+import path from "path";
+import sharp from "sharp";
 
 // src/transform.ts
-var import_sharp = __toESM(require("sharp"));
-var import_debug2 = __toESM(require("debug"));
+import Sharp from "sharp";
+import Debug2 from "debug";
 
 // src/v2/index.ts
 var v2_exports = {};
@@ -65,8 +34,8 @@ __export(v2_exports, {
 });
 
 // src/calculator/base.ts
-var import_debug = __toESM(require("debug"));
-var debug = (0, import_debug.default)("iiif-processor:calculator");
+import Debug from "debug";
+var debug = Debug("iiif-processor:calculator");
 var IR = "\\d+";
 var FR = "\\d+(?:\\.\\d+)?";
 var PCTR = /^pct:(?<val>[\d.,]+)/;
@@ -450,7 +419,7 @@ var Versions = {
 var versions_default = Versions;
 
 // src/transform.ts
-var debug2 = (0, import_debug2.default)("iiif-processor:transform");
+var debug2 = Debug2("iiif-processor:transform");
 var DEFAULT_PAGE_THRESHOLD = 1;
 var SCALE_PRECISION = 1e7;
 var Operations = class {
@@ -505,7 +474,7 @@ var Operations = class {
     return { page, scale };
   }
   pipeline() {
-    const pipeline = (0, import_sharp.default)({ limitInputPixels: false, ...this.sharpOptions || {} });
+    const pipeline = Sharp({ limitInputPixels: false, ...this.sharpOptions || {} });
     const { page, scale } = this.computePage();
     pipeline.options.input.page = page;
     const { format, quality, region, rotation: { flop, degree }, size } = this.info();
@@ -556,8 +525,8 @@ function scaleRegion(region, scale, page) {
 }
 
 // src/processor.ts
-var debug3 = (0, import_debug3.default)("iiif-processor:main");
-var debugv = (0, import_debug3.default)("verbose:iiif-processor");
+var debug3 = Debug3("iiif-processor:main");
+var debugv = Debug3("verbose:iiif-processor");
 var defaultpathPrefix = "/iiif/{{version}}/";
 function getIiifVersion(url, template) {
   const { origin, pathname } = new URL(url);
@@ -631,7 +600,7 @@ var Processor = class {
   async defaultDimensionFunction({ id, baseUrl }) {
     const result = [];
     let page = 0;
-    const target = (0, import_sharp2.default)({ limitInputPixels: false, page });
+    const target = sharp({ limitInputPixels: false, page });
     return await this.withStream({ id, baseUrl }, async (stream) => {
       stream.pipe(target);
       const { width, height, pages } = await target.metadata();
@@ -668,7 +637,7 @@ var Processor = class {
       sizes.push({ width: size[0], height: size[1] });
     }
     const uri = new URL(this.baseUrl);
-    uri.pathname = import_path.default.join(uri.pathname, this.id);
+    uri.pathname = path.join(uri.pathname, this.id);
     const id = uri.toString();
     const doc = this.Implementation.infoDoc({ id, ...dim, sizes, max: this.max });
     for (const prop in doc) {
@@ -685,7 +654,7 @@ var Processor = class {
   }
   async applyBorder(transformed) {
     const buf = await transformed.toBuffer();
-    const borderPipe = (0, import_sharp2.default)(buf, { limitInputPixels: false });
+    const borderPipe = sharp(buf, { limitInputPixels: false });
     const { width, height } = await borderPipe.metadata();
     const background = { r: 255, g: 0, b: 0, alpha: 1 };
     const topBorder = { create: { width, height: 1, channels: 4, background } };
@@ -716,11 +685,11 @@ var Processor = class {
     });
     debug3("returning %d bytes", result.length);
     debug3("baseUrl", this.baseUrl);
-    const canonicalUrl = new URL(import_path.default.join(this.id, operations.canonicalPath()), this.baseUrl);
+    const canonicalUrl = new URL(path.join(this.id, operations.canonicalPath()), this.baseUrl);
     return {
       canonicalLink: canonicalUrl.toString(),
       profileLink: this.Implementation.profileLink,
-      contentType: import_mime_types.default.lookup(this.format),
+      contentType: mime.lookup(this.format),
       body: result
     };
   }
@@ -732,10 +701,9 @@ var Processor = class {
     }
   }
 };
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
+export {
   IIIFError,
   Processor,
   Versions
-});
-//# sourceMappingURL=index.js.map
+};
+//# sourceMappingURL=index.mjs.map
