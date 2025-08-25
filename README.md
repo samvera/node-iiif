@@ -177,3 +177,6 @@ This repository follows the [Samvera Community Code of Conduct](https://samvera.
 ## License
 
 `node-iiif` is available under [the Apache 2.0 license](LICENSE).
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif?ref=badge_large)
