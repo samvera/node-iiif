@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   v2: {
     qualities: ['color', 'gray', 'bitonal', 'default'],
     formats: ['jpg', 'jpeg', 'tif', 'tiff', 'png', 'webp'],

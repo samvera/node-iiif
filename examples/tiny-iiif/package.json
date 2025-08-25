@@ -3,12 +3,13 @@
   "version": "5.2.2",
   "description": "Example server for node-iiif using @tinyhttp",
   "type": "module",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "dev": "IIIF_IMAGE_PATH=./tiff nodemon --watch ../.. node index.js",
-    "lint": "eslint *.js",
-    "lint-fix": "eslint --fix *.js",
-    "tiny-iiif": "IIIF_IMAGE_PATH=./tiff node index.js"
+    "dev": "IIIF_IMAGE_PATH=./tiff nodemon",
+    "lint": "eslint *.ts",
+    "lint-fix": "eslint --fix *.ts",
+    "tiny-iiif": "IIIF_IMAGE_PATH=./tiff tsx index.ts",
+    "dev:all": "concurrently -n build,server -c blue,green \"npm run --prefix ../.. build:watch\" \"npm run dev\""
   },
   "repository": {
     "type": "git",
@@ -36,13 +37,15 @@
     "sharp": "^0.33.5"
   },
   "devDependencies": {
-    "eslint": "^7.10.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jest": "^24.0.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.16.0",
+    "concurrently": "^9.0.1",
+    "eslint": "^8.34.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.2.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
+    "eslint-plugin-promise": "^6.1.1",
     "nodemon": "^2.0.21"
   }
 }

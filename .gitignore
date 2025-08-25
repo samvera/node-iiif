@@ -1,6 +1,7 @@
-package-lock.json
 yarn.lock
 .nyc_output
 coverage
 node_modules
 .vscode
+reports
+dist

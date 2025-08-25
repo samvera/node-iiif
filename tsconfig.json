@@ -1,6 +1,20 @@
 {
   "compilerOptions": {
-    "typeRoots": ["types"]
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "resolveJsonModule": true,
+    "types": ["jest", "node"],
+    "typeRoots": ["types", "node_modules/@types"],
+    "rootDir": "."
   },
-  "include": ["src/**/*.js"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "examples/tiny-iiif/**/*.ts"
+  ]
 }

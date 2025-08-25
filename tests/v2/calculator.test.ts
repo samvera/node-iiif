@@ -1,10 +1,12 @@
+/// <reference types="jest" />
 'use strict';
 
-const assert = require('assert');
-const { Calculator } = require('../../src/calculator/v2');
-const IIIFError = require('../../src/error');
-
-const { v2: { qualities, formats, regions, sizes, rotations } } = require('../fixtures/iiif-values');
+import { describe, it, beforeEach } from '@jest/globals';
+import assert from 'assert';
+import { Calculator } from '../../src/calculator/v2';
+import { IIIFError } from '../../src/error';
+import values from '../fixtures/iiif-values';
+const { v2: { qualities, formats, regions, sizes, rotations } } = values as any;
 
 let subject;
 
