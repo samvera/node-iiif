@@ -2,7 +2,8 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
-##### Unreleased
+##### v6.0.0
+- Complete refactor of entire library into TypeScript
 - StreamResolver is now Promise-only: the single-argument resolver must return a `Promise<ReadableStream>`; update examples and tests accordingly.
 - Deprecate the 2-argument callback resolver form; it continues to work for now but will be removed in a future major version. Prefer the promise-based resolver.
 - Add strict typecheck scripts and internal TypeScript type contracts to reduce `any` usage.
