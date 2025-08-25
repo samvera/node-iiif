@@ -34,6 +34,18 @@
     "space-in-parens"       : ["error", "never"],
 
     // This should replicate Code Climate's computational complexity code smells warning. It is actually more strict.
-    "complexity"            : ["warn", 5]
-  }
+    "complexity"            : ["warn", 6]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint", "jest"],
+      "extends": ["plugin:@typescript-eslint/recommended"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 }

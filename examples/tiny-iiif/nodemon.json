@@ -1,0 +1,10 @@
+{
+  "watch": ["../../dist"],
+  "ext": "js,json",
+  "exec": "tsx index.ts",
+  "delay": "200ms",
+  "legacyWatch": true,
+  "env": {
+    "FORCE_COLOR": "1"
+  }
+}

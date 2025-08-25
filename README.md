@@ -3,7 +3,7 @@
 [![Build Status](https://circleci.com/gh/samvera/node-iiif.svg?style=svg)](https://circleci.com/gh/samvera/node-iiif)
 [![Maintainability](https://api.codeclimate.com/v1/badges/b5da41e405f8c020c273/maintainability)](https://codeclimate.com/github/samvera/node-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/node-iiif/badge.svg)](https://coveralls.io/github/samvera/node-iiif)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsamvera%2Fnode-iiif?ref=badge_shield&issueType=license)
 
 This module provides a full-featured image processor supporting the IIIF Image API versions [2.1](https://iiif.io/api/image/2.1/) and 
 [3.0](https://iiif.io/api/image/3.0/). It covers only the image processing pipeline itself, leaving input and output to the caller.
@@ -16,14 +16,14 @@ npm install iiif-processor --save
 
 ## Usage
 
-```javascript
-const IIIF = require('iiif-processor');
+```typescript
+import { Processor } from "iiif-processor";
 
-const processor = new IIIF.Processor(url, streamResolver, opts);
+const processor = new Processor(url, streamResolver, opts);
 ```
 
 * `url` (string, required) - the URL of the IIIF resource to process
-* `streamResolver` (function, required) – a callback function that returns a readable image stream for a given request ([see below](#stream-resolver))
+* `streamResolver` (async function, required) – returns a Promise of a readable image stream for a given request ([see below](#stream-resolver)); the legacy two-argument callback form is deprecated
 * `opts`:
   * `dimensionFunction` (function) – a callback function that returns the image dimensions for a given request ([see below](#dimension-function))
   * `max` (object) – optional maximum size constraints of an image that can be returned
@@ -31,9 +31,11 @@ const processor = new IIIF.Processor(url, streamResolver, opts);
     * `height` (integer) - the maximum pixel height of the returned image
     * `area` (integer) - the maximum total number of pixels in the returned image
   * `includeMetadata` (boolean) – if `true`, all metadata from the source image will be copied to the result
+  * `debugBorder` (boolean) – if `true`, add a 1px red border to every generated image (for tile debugging)
   * `density` (integer) – the pixel density to be included in the result image in pixels per inch
     * This has no effect whatsoever on the size of the image that gets returned; it's simply for convenience when using
       the resulting image in software that calculates a default print size based on the height, width, and density
+  * `pageThreshold` (integer) – the fudge factor (in number of pixels) to mitigate rounding errors in pyramid page selection (default: `1`)
   * `pathPrefix` (string) – the template used to extract the IIIF version and API parameters from the URL path (default: `/iiif/{{version}}/`) ([see below](#path-prefix))
   * `version` (number) – the major version (`2` or `3`) of the IIIF Image API to use (default: inferred from `/iiif/{version}/`)
 
@@ -45,16 +47,16 @@ See the [TinyIIIF](./examples/tiny-iiif/README.md) example.
 
 ### Stream Resolver
 
-The calling function must supply the processor with a Stream Resolver callback
-function, which takes information about the request [(`id` and `baseUrl`)](#id--baseurl) and returns an open
-[Readable Stream](https://nodejs.org/api/stream.html#stream_class_stream_readable) from which the source image can be read.
+The calling function must supply the processor with a Stream Resolver that returns a
+Promise of an open [Readable Stream](https://nodejs.org/api/stream.html#stream_class_stream_readable).
+It receives information about the request [(`id` and `baseUrl`)](#id--baseurl).
 
 #### Pairtree File Source
 
-```javascript
-function streamResolver({ id, baseUrl }) {
-  let imagePath = '/path/to/image/root/' + id.match(/.{1,2}/g).join('/') + '/image.tif';
-  return fs.createReadStream(imagePath);
+```typescript
+async function streamResolver({ id, baseUrl }) {
+  let imagePath = "/path/to/image/root/" + id.match(/.{1,2}/g).join("/") + "/image.tif";
+  return createReadStream(imagePath);
 }
 ```
 
@@ -64,22 +66,29 @@ the function to do its own cleanup.
 
 #### Amazon S3 Bucket Source
 
-```javascript
-const AWS = require('aws-sdk');
+```typescript
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-async function streamResolver({ id, baseUrl }, callback) {
-  let s3 = new AWS.S3();
-  let key = id + '.tif';
-  let request = s3.getObject({ Bucket: 'my-tiff-bucket', Key: key });
-  let stream = request.createReadStream();
-  try {
-    return await callback(stream);
-  } finally {
-    stream.end().destroy();
-    request.abort();
+async function streamResolver({ id, baseUrl }) {
+  const s3 = new S3Client();
+  const command = new GetObjectCommand({
+    Bucket: "my-tiff-bucket",
+    Key: `${id}.tif`
+  });
+  const response = await s3.send(command);
+  const body = response.Body;
+
+  if (!stream) {
+    throw new Error(`Could not fetch object from S3: ${id}`);
   }
+
+  return stream;
 }
 ```
+
+Note: The two-argument callback form is still supported but deprecated; prefer the
+promise-based resolver shown above. If you currently return a stream synchronously,
+wrap it with `Promise.resolve()` or mark your function `async`.
 
 ### Dimension Function
 
@@ -103,8 +112,8 @@ The function should return either:
 
 Providing the dimensions of all available pages allows the processor to choose the most efficient starting image for the size requested.
 
-```javascript
-async function dimensionFunction({ id, baseUrl }) {
+```typescript
+async function dimensionFunction({ id: string, baseUrl: string }): Promise<Dimensions | Dimensions[]> {
   let dimensions = lookDimensionsUpInDatabase(id);
   return { width: dimensions.width, height: dimensions.height };
 }
@@ -121,25 +130,24 @@ The `pathPrefix` constructor option provides a tremendous amount of flexibility 
 ### Processing
 
 #### Promise
-```javascript
-const IIIF = require('iiif-processor');
+```typescript
+import { Processor } from "iiif-processor";
 
-let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction });
+let url = "http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg"
+let processor = new Processor(url, streamResolver, { dimensionFunction });
 processor.execute()
   .then(result => handleResult(result))
   .catch(err => handleError(err));
 ```
 
 #### Async/Await
-```javascript
-const IIIF = require('iiif-processor');
+```typescript
+import { Processor } from "iiif-processor";
 
-let url = 'http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg'
-let processor = new IIIF.Processor(url, streamResolver, { dimensionFunction });
+let url = "http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg"
+let processor = new Processor(url, streamResolver, { dimensionFunction });
 try {
-  let result = await processor.execute();
-  return result;
+  return await processor.execute();
 } catch (err) {
   handleError(err);
 }
