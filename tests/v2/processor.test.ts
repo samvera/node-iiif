@@ -131,16 +131,16 @@ describe('Density', () => {
 });
 
 describe('constructor', () => {
-  it('must parse the object-based constructor', () => {
+  it('must parse the object-based constructor', async () => {
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       async () => new Stream.Readable({ read () {} }),
-      { dimensionFunction: () => 'dimensionFunction', max: { width: 'maxWidth' }, includeMetadata: true, density: 600 }
+      { dimensionFunction: () => Promise.resolve({width: 1024, height: 768}), max: { width: 1000 }, includeMetadata: true, density: 600 }
     );
 
+    expect(subject.dimensionFunction()).resolves.toEqual({width: 1024, height: 768});
     assert.equal(typeof subject.streamResolver, 'function');
-    assert.strictEqual(subject.dimensionFunction(), 'dimensionFunction');
-    assert.strictEqual(subject.max.width, 'maxWidth');
+    assert.strictEqual(subject.max.width, 1000);
     assert.strictEqual(subject.includeMetadata, true);
     assert.strictEqual(subject.density, 600);
   });
@@ -231,7 +231,7 @@ describe('dimension function', () => {
       });
     }
 
-    const dimensionFunction = ({ id, baseUrl }) => {
+    const dimensionFunction = async ({ id, baseUrl }) => {
       expect(id).toEqual('i');
       expect(baseUrl).toEqual('https://example.org/iiif/2/ab/cd/ef/gh/');
       return { width: 100, height: 100 }

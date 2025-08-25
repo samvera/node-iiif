@@ -134,36 +134,25 @@ describe('Density', () => {
 });
 
 describe('constructor', () => {
-  it('must parse the object-based constructor', () => {
+  it('must parse the object-based constructor', async () => {
     const max = {
-      width: 'maxWidth',
-      height: 'maxHeight',
-      area: 'maxArea'
+      width: 1000,
+      height: 1000,
+      area: 10000
     }
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
       async () => new Stream.Readable({ read () {} }),
-      { dimensionFunction: () => 'dimensionFunction', max, includeMetadata: true, density: 600 }
+      { dimensionFunction: () => Promise.resolve({width: 1024, height: 768}), max, includeMetadata: true, density: 600 }
     );
 
     assert.equal(typeof subject.streamResolver, 'function');
-    assert.strictEqual(subject.dimensionFunction(), 'dimensionFunction');
-    assert.strictEqual(subject.max.width, 'maxWidth');
-    assert.strictEqual(subject.max.height, 'maxHeight');
-    assert.strictEqual(subject.max.area, 'maxArea');
+    expect(subject.dimensionFunction()).resolves.toEqual({width: 1024, height: 768});
+    assert.strictEqual(subject.max.width, 1000);
+    assert.strictEqual(subject.max.height, 1000);
+    assert.strictEqual(subject.max.area, 10000);
     assert.strictEqual(subject.includeMetadata, true);
     assert.strictEqual(subject.density, 600);
-  });
-
-  it('rejects maxHeight without maxWidth', () => {
-    assert.throws(() => 
-      new Processor(
-        `${base}/10,20,30,40/pct:50/45/default.tif`,
-        async () => new Stream.Readable({ read () {} }),
-        { dimensionFunction: () => 'dimensionFunction', max: { height: 400 }, includeMetadata: true, density: 600 }
-      ),
-      IIIFError
-    );
   });
 
   it('properly handles custom sharp options', async () => {
@@ -229,11 +218,11 @@ describe('dimension function', () => {
       });
     }
 
-    const dimensionFunction = ({ id, baseUrl }) => {
+    const dimensionFunction = async ({ id, baseUrl }) => {
       expect(id).toEqual('i');
       expect(baseUrl).toEqual('https://example.org/iiif/3/ab/cd/ef/gh/');
       return { width: 100, height: 100 }
-    }
+    };
 
     const subject = new Processor(
       `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,

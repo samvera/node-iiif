@@ -1,3 +1,9 @@
 export { IIIFError } from './error';
-export { Processor } from './processor';
+export {
+  DimensionFunction,
+  StreamResolver,
+  StreamResolverWithCallback,
+  Processor,
+  ProcessorOptions
+} from './processor';
 export { Versions } from './versions';

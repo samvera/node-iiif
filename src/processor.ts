@@ -27,11 +27,24 @@ function getIiifVersion (url: string, template: string) {
   }
 }
 
-type StreamResolver = (input: { id: string; baseUrl: string }) => Promise<NodeJS.ReadableStream>;
-type StreamResolverWithCallback = (
+export type DimensionFunction = (input: { id: string; baseUrl: string }) => Promise<Dimensions | Dimensions[]>;
+export type StreamResolver = (input: { id: string; baseUrl: string }) => Promise<NodeJS.ReadableStream>;
+export type StreamResolverWithCallback = (
   input: { id: string; baseUrl: string },
   callback: (stream: NodeJS.ReadableStream) => Promise<unknown>
 ) => Promise<unknown>;
+export type ProcessorOptions = {
+  dimensionFunction?: DimensionFunction;
+  max?: { width: number; height?: number, area?: number };
+  includeMetadata?: boolean;
+  density?: number;
+  debugBorder?: boolean;
+  iiifVersion?: 2 | 3;
+  pageThreshold?: number;
+  pathPrefix?: string;
+  sharpOptions?: Record<string, unknown>;
+  request?: string;
+};
 
 export class Processor {
   private errorClass = IIIFError;
@@ -55,14 +68,14 @@ export class Processor {
   format!: string;
 
   // options
-  dimensionFunction!: (input: { id: string; baseUrl: string }) => Promise<Dimensions | Dimensions[]>;
+  dimensionFunction!: DimensionFunction;
   max?: MaxDimensions;
   includeMetadata = false;
   density?: number | null;
   debugBorder = false;
   pageThreshold?: number;
 
-  constructor (url: string, streamResolver: StreamResolver | StreamResolverWithCallback, opts: any = {}) {
+  constructor (url: string, streamResolver: StreamResolver | StreamResolverWithCallback, opts: ProcessorOptions = {}) {
     const { prefix, iiifVersion, request } = getIiifVersion(url, opts.pathPrefix || defaultpathPrefix);
 
     if (typeof streamResolver !== 'function') {
