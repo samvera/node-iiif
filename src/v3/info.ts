@@ -1,3 +1,4 @@
+import { Dimensions } from '../types';
 import { Formats, Qualities } from '../calculator/v3';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Debug from 'debug';
@@ -13,8 +14,16 @@ const ComplianceProfile = {
 };
 
 const IIIFExtras = {
-  extraFormats: new Set(Formats.filter((format) => !(ComplianceProfile.formats as Set<string>).has(format))),
-  extraQualities: new Set(Qualities.filter((quality) => !(ComplianceProfile.qualities as Set<string>).has(quality))),
+  extraFormats: new Set(
+    Formats.filter(
+      (format) => !(ComplianceProfile.formats as Set<string>).has(format)
+    )
+  ),
+  extraQualities: new Set(
+    Qualities.filter(
+      (quality) => !(ComplianceProfile.qualities as Set<string>).has(quality)
+    )
+  ),
   extraFeatures: [
     'canonicalLinkHeader',
     'mirroring',
@@ -32,7 +41,7 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
     maxWidth: max?.width,
     maxHeight: max?.height,
     maxArea: max?.area
-  } as any;
+  };
 
   return {
     '@context': 'http://iiif.io/api/image/3/context.json',
@@ -46,7 +55,11 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
     extraQualities: [...(IIIFExtras.extraQualities as Set<string>)],
     extraFeatures: IIIFExtras.extraFeatures,
     tiles: [
-      { width: 512, height: 512, scaleFactors: sizes.map((_v: any, i: number) => 2 ** i) }
+      {
+        width: 512,
+        height: 512,
+        scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i)
+      }
     ],
     profile: ComplianceProfile,
     ...maxAttrs

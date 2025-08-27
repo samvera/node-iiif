@@ -1,4 +1,4 @@
-import type { BoundingBox, Dimensions, Format, MaxDimensions, Quality } from './types';
+import type { BoundingBox, Dimensions, Format, IIIFSpec, MaxDimensions, Quality } from './types';
 
 export interface Calculated {
   region: BoundingBox;
@@ -19,9 +19,11 @@ export interface CalculatorLike {
   canonicalPath(): string;
 }
 
+export type CalculatorOptions = { max?: MaxDimensions };
+
 export type CalculatorCtor = {
-  new (dims: Dimensions, opts?: { max?: MaxDimensions }): CalculatorLike;
-  parsePath(path: string): any;
+  new (dims: Dimensions, opts?: CalculatorOptions): CalculatorLike;
+  parsePath(path: string): IIIFSpec | null;
 };
 
 export interface InfoDocInput {
