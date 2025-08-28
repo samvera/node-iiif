@@ -5,7 +5,7 @@ import sharp from 'sharp';
 import { Operations } from './transform';
 import { IIIFError } from './error';
 import Versions from './versions';
-import type { Dimensions, MaxDimensions } from './types';
+import type { Dimensions, MaxDimensions, ResolvedDimensions } from './types';
 import type { VersionModule } from './contracts';
 
 const debug = Debug('iiif-processor:main');
@@ -18,7 +18,7 @@ function getIiifVersion (url: string, template: string) {
   const templateMatcher = template.replace(/\{\{version\}\}/, '(?<iiifVersion>2|3)');
   const pathMatcher = `^(?<prefix>${templateMatcher})(?<request>.+)$`;
   const re = new RegExp(pathMatcher);
-  const parsed = re.exec(pathname) as any;
+  const parsed = re.exec(pathname);
   if (parsed) {
     parsed.groups.prefix = origin + parsed.groups.prefix;
     return { ...parsed.groups } as { prefix: string; iiifVersion: string; request: string };
@@ -96,7 +96,7 @@ export class Processor {
       .initialize(streamResolver);
   }
 
-  setOpts (opts: any) {
+  setOpts (opts) {
     this.dimensionFunction = opts.dimensionFunction;
     this.max = { ...opts.max };
     this.includeMetadata = !!opts.includeMetadata;
@@ -110,8 +110,8 @@ export class Processor {
     return this;
   }
 
-  initialize (streamResolver: any) {
-    this.Implementation = (Versions as any)[this.version] as VersionModule;
+  initialize (streamResolver: StreamResolver | StreamResolverWithCallback) {
+    this.Implementation = Versions[this.version] as VersionModule;
     if (!this.Implementation) {
       throw new IIIFError(`No implementation found for IIIF Image API v${this.version}`);
     }
@@ -121,17 +121,17 @@ export class Processor {
     Object.assign(this, params);
     this.streamResolver = streamResolver;
 
-    if ((this as any).quality && (this as any).format) {
+    if (this.quality && this.format) {
       this.filename = [this.quality, this.format].join('.');
-    } else if ((this as any).info) {
+    } else if (this.info) {
       this.filename = 'info.json';
     }
     return this;
   }
 
-  async withStream ({ id, baseUrl }: { id: string; baseUrl: string }, callback: (s: NodeJS.ReadableStream) => Promise<any>) {
+  async withStream ({ id, baseUrl }: { id: string; baseUrl: string }, callback: (s: NodeJS.ReadableStream) => Promise<unknown>) {
     debug('Requesting stream for %s', id);
-    if ((this.streamResolver as any).length === 2) {
+    if (this.streamResolver.length === 2) {
       return await (this.streamResolver as StreamResolverWithCallback)({ id, baseUrl }, callback);
     } else {
       const stream = await (this.streamResolver as StreamResolver)({ id, baseUrl });
@@ -154,20 +154,20 @@ export class Processor {
         result.push({ width: Math.floor(width * scale), height: Math.floor(height * scale) });
       }
       return result;
-    });
+    }) as Dimensions[];
   }
 
   async dimensions (): Promise<Dimensions[]> {
     const fallback = this.dimensionFunction !== this.defaultDimensionFunction.bind(this);
 
     if (!this.sizeInfo) {
-      debug('Attempting to use dimensionFunction to retrieve dimensions for %j', (this as any).id);
-      const params = { id: (this as any).id, baseUrl: this.baseUrl };
-      let dims: any = await this.dimensionFunction(params);
+      debug('Attempting to use dimensionFunction to retrieve dimensions for %j', this.id);
+      const params = { id: this.id, baseUrl: this.baseUrl };
+      let dims: ResolvedDimensions = await this.dimensionFunction(params);
       if (fallback && !dims) {
         const warning = 'Unable to get dimensions for %s using custom function. Falling back to sharp.metadata().';
-        debug(warning, (this as any).id);
-        console.warn(warning, (this as any).id);
+        debug(warning, this.id);
+        console.warn(warning, this.id);
         dims = await this.defaultDimensionFunction(params);
       }
       if (!Array.isArray(dims)) dims = [dims];
@@ -209,16 +209,16 @@ export class Processor {
       .withMetadata(this.includeMetadata);
   }
 
-  async applyBorder (transformed: any) {
+  async applyBorder (transformed: sharp.Sharp) {
     const buf = await transformed.toBuffer();
     const borderPipe = sharp(buf, { limitInputPixels: false });
     const { width, height } = await borderPipe.metadata();
-    const background = { r: 255, g: 0, b: 0, alpha: 1 } as any;
+    const background = { r: 255, g: 0, b: 0, alpha: 1 };
 
-    const topBorder = { create: { width, height: 1, channels: 4, background } } as any;
-    const bottomBorder = { create: { width, height: 1, channels: 4, background } } as any;
-    const leftBorder = { create: { width: 1, height, channels: 4, background } } as any;
-    const rightBorder = { create: { width: 1, height, channels: 4, background } } as any;
+    const topBorder = { create: { width, height: 1, channels: 4, background } as sharp.Create };
+    const bottomBorder = { create: { width, height: 1, channels: 4, background } as sharp.Create };
+    const leftBorder = { create: { width: 1, height, channels: 4, background } as sharp.Create };
+    const rightBorder = { create: { width: 1, height, channels: 4, background } as sharp.Create };
 
     return borderPipe.composite([
       { input: topBorder, left: 0, top: 0 },

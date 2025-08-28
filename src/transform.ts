@@ -1,7 +1,7 @@
 import Sharp, { Sharp as SharpType } from 'sharp';
 import Debug from 'debug';
 import { Versions } from './versions';
-import type { VersionModule, CalculatorLike } from './contracts';
+import type { VersionModule, CalculatorLike, CalculatorOptions } from './contracts';
 import type { Dimensions, BoundingBox, Format } from './types';
 
 const debug = Debug('iiif-processor:transform');
@@ -18,9 +18,9 @@ export class Operations {
   private calculator: CalculatorLike;
   private pageThreshold: number;
 
-  constructor (version: number, dims: Dimensions[], opts: any) {
+  constructor (version: number, dims: Dimensions[], opts: CalculatorOptions & { sharp?: Record<string, unknown>; pageThreshold?: number }) {
     const { sharp, pageThreshold, ...rest } = opts || {};
-    const Implementation: VersionModule = (Versions as any)[version];
+    const Implementation: VersionModule = Versions[version];
     this.calculator = new Implementation.Calculator(dims[0], rest);
     this.pageThreshold = typeof pageThreshold === 'number' ? pageThreshold : DEFAULT_PAGE_THRESHOLD;
 
@@ -51,7 +51,7 @@ export class Operations {
   }
 
   format (v: string, density?: number) {
-    this.calculator.format(v, density as any);
+    this.calculator.format(v, density);
     return this;
   }
 
@@ -85,7 +85,7 @@ export class Operations {
   pipeline (): SharpType {
     const pipeline = Sharp({ limitInputPixels: false, ...(this.sharpOptions || {}) });
     const { page, scale } = this.computePage();
-    (pipeline as any).options.input.page = page;
+    (pipeline as any).options.input.page = page; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     const { format, quality, region, rotation: { flop, degree }, size } = this.info();
     scaleRegion(region, scale, this.pages[page]);
@@ -104,8 +104,8 @@ export class Operations {
 }
 
 function setFormat (pipeline: SharpType, format: { type: Format; density?: number }) {
-  let pipelineFormat: string;
-  const pipelineOptions: any = {};
+  let pipelineFormat;
+  const pipelineOptions: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   switch (format.type) {
     case 'jpeg':
@@ -121,9 +121,9 @@ function setFormat (pipeline: SharpType, format: { type: Format; density?: numbe
     default:
       pipelineFormat = format.type;
   }
-  (pipeline as any).toFormat(pipelineFormat, pipelineOptions);
+  pipeline.toFormat(pipelineFormat, pipelineOptions);
   if (format.density) {
-    (pipeline as any).withMetadata({ density: format.density });
+    pipeline.withMetadata({ density: format.density });
   }
 }
 

@@ -1,8 +1,9 @@
-import { Base } from './base';
+import { CalculatorOptions } from '../contracts';
+import { Base, ValidatorMap } from './base';
 
 export class Calculator extends Base {
-  static _matchers () {
-    const result: any = { ...(super._matchers() as any) };
+  static _matchers (): ValidatorMap {
+    const result: ValidatorMap = { ...super._matchers() };
     result.size = [...result.size].reduce((sizes: string[], pattern: string) => {
       if (pattern !== 'full') sizes.push(`\\^?${pattern}`);
       return sizes;
@@ -10,15 +11,15 @@ export class Calculator extends Base {
     return result;
   }
 
-  constructor (dims: { width: number; height: number }, opts: any = {}) {
+  constructor (dims: { width: number; height: number }, opts: CalculatorOptions = {}) {
     super(dims, opts);
-    (this as any)._canonicalInfo.size = 'max';
-    (this as any)._parsedInfo.upscale = false;
+    this._canonicalInfo.size = 'max';
+    this._parsedInfo.upscale = false;
   }
 
   size (v: string) {
     if (v[0] === '^') {
-      (this as any)._parsedInfo.upscale = true;
+      this._parsedInfo.upscale = true;
       v = v.slice(1, v.length);
     }
     return super.size(v);

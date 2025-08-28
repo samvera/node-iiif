@@ -1,27 +1,31 @@
 import Debug from 'debug';
 import { IIIFError } from '../error';
 import type { BoundingBox, Dimensions, MaxDimensions } from '../types';
-import type { Calculated } from '../contracts';
+import type { Calculated, CalculatorOptions } from '../contracts';
 
 const debug = Debug('iiif-processor:calculator');
+
+export type ValidatorKey = 'quality' | 'format' | 'region' | 'size' | 'rotation' | 'density';
+export type ValidatorMap = Record<ValidatorKey, string[]>;
 
 const IR = '\\d+';
 const FR = '\\d+(?:\\.\\d+)?';
 const PCTR = /^pct:(?<val>[\d.,]+)/;
 
-const Validators = {
+const Validators: ValidatorMap = {
   quality: ['color', 'gray', 'bitonal', 'default'],
   format: ['jpg', 'jpeg', 'tif', 'tiff', 'png', 'webp'],
   region: ['full', 'square', `pct:${FR},${FR},${FR},${FR}`, `${IR},${IR},${IR},${IR}`],
   size: ['full', 'max', `pct:${FR}`, `${IR},`, `,${IR}`, `\\!?${IR},${IR}`],
-  rotation: [`\\!?${FR}`]
+  rotation: [`\\!?${FR}`],
+  density: []
 };
 
 type SizeDesc = { width?: number | null; height?: number | null; fit?: 'fill' | 'inside' };
 type CanonicalInfo = { region: 'full' | BoundingBox; size: 'full' | 'max' | string; rotation: string; quality: string; format: string };
 type ParsedInfo = { region: BoundingBox; size: SizeDesc; rotation: { flop: boolean; degree: number }; quality: string; format: { type: string; density?: number }; upscale: boolean };
 
-function validateDensity (v: any) {
+function validateDensity (v: unknown) {
   debug('validating density %s', v);
   if (v === null) return true;
   if (v === undefined) return true;
@@ -38,24 +42,37 @@ export class Base {
   protected _parsedInfo: ParsedInfo;
   protected _sourceDims: Dimensions;
 
-  static _matchers () {
+  static _matchers (): typeof Validators {
     return Validators;
   }
 
-  static _validator (type: keyof typeof Validators) {
-    const result = (this._matchers() as any)[type].join('|');
+  static _validator (type: ValidatorKey) {
+    const result = this._matchers()[type].join('|');
     return `(?<${type}>${result})`;
   }
 
   static parsePath (path: string) {
-    const transformation = ['region', 'size', 'rotation'].map((type) => (this as any)._validator(type)).join('/') + '/' + (this as any)._validator('quality') + '.' + (this as any)._validator('format');
-    const re = new RegExp(`^/?(?<id>.+?)/(?:(?<info>info.json)|${transformation})$`);
-    const result = (re.exec(path) as any)?.groups;
-    if (!result) throw new IIIFError(`Not a valid IIIF path: ${path}`, { statusCode: 400 });
+    const transformation =
+      ['region', 'size', 'rotation']
+        .map((type: ValidatorKey) => this._validator(type))
+        .join('/') +
+      '/' +
+      this._validator('quality') +
+      '.' +
+      this._validator('format');
+    const re = new RegExp(
+      `^/?(?<id>.+?)/(?:(?<info>info.json)|${transformation})$`
+    );
+    const result = re.exec(path)?.groups;
+    if (!result) {
+      throw new IIIFError(`Not a valid IIIF path: ${path}`, {
+        statusCode: 400
+      });
+    }
     return result;
   }
 
-  constructor (dims: Dimensions, opts: { max?: MaxDimensions } = {}) {
+  constructor (dims: Dimensions, opts: CalculatorOptions = {}) {
     this.dims = { ...dims };
     this.opts = { ...opts };
     this._sourceDims = { ...dims };
@@ -76,9 +93,9 @@ export class Base {
     };
   }
 
-  protected _validate (type: string, v: unknown) {
+  protected _validate (type: (keyof typeof Validators) | 'density', v: unknown) {
     if (type === 'density') return validateDensity(v);
-    const re = new RegExp(`^${(this.constructor as any)._validator(type)}$`);
+    const re = new RegExp(`^${Base._validator(type)}$`);
     debug('validating %s %s against %s', type, v, re);
     if (!re.test(String(v))) {
       throw new IIIFError(`Invalid ${type}: ${v}`, { statusCode: 400 });
@@ -113,7 +130,9 @@ export class Base {
       this._setSize(this._parsedInfo.region);
       isMax = true;
     } else if (pct) {
-      this._setSize(sizePct(pct.groups?.val as string, this._parsedInfo.region));
+      this._setSize(
+        sizePct(pct.groups?.val as string, this._parsedInfo.region)
+      );
     } else {
       this._setSize(sizeWH(v));
     }
@@ -124,7 +143,10 @@ export class Base {
   rotation (v: string) {
     this._validate('rotation', v);
     this._canonicalInfo.rotation = v;
-    this._parsedInfo.rotation = { flop: v[0] === '!', degree: Number(v.replace(/^!/, '')) };
+    this._parsedInfo.rotation = {
+      flop: v[0] === '!',
+      degree: Number(v.replace(/^!/, ''))
+    };
     return this;
   }
 
@@ -144,7 +166,10 @@ export class Base {
   }
 
   info (): Calculated {
-    return { ...this._parsedInfo, fullSize: fullSize(this._sourceDims, this._parsedInfo as any) } as Calculated;
+    return {
+      ...this._parsedInfo,
+      fullSize: fullSize(this._sourceDims, this._parsedInfo)
+    } as Calculated;
   }
 
   canonicalPath () {
@@ -155,9 +180,8 @@ export class Base {
   protected _setSize (v: BoundingBox | SizeDesc) {
     const max: MaxDimensions = { ...(this.opts?.max || {}) };
     max.height = max.height || max.width;
-    this._parsedInfo.size = (v as any).left !== undefined
-      ? { width: (v as BoundingBox).width, height: (v as BoundingBox).height, fit: 'fill' }
-      : { ...(v as SizeDesc) };
+    this._parsedInfo.size =
+      ('left' in v) ? { width: v.width, height: v.height, fit: 'fill' } : { ...v };
     this._constrainSize(max);
     if (!this._parsedInfo.upscale) {
       this._constrainSize(this._sourceDims);
@@ -165,7 +189,7 @@ export class Base {
     return this;
   }
 
-  protected _constrainSize (constraints: any) {
+  protected _constrainSize (constraints: MaxDimensions) {
     const full = fullSize(this._sourceDims, this._parsedInfo);
     const constraint = minNum(
       constraints.width / full.width,
@@ -174,10 +198,14 @@ export class Base {
     );
     if (constraint < 1) {
       if (this._parsedInfo.size.width) {
-        this._parsedInfo.size.width = Math.floor(this._parsedInfo.size.width * constraint);
+        this._parsedInfo.size.width = Math.floor(
+          this._parsedInfo.size.width * constraint
+        );
       }
       if (this._parsedInfo.size.height) {
-        this._parsedInfo.size.height = Math.floor(this._parsedInfo.size.height * constraint);
+        this._parsedInfo.size.height = Math.floor(
+          this._parsedInfo.size.height * constraint
+        );
       }
     }
   }
@@ -206,13 +234,17 @@ function minNum (...args: unknown[]) {
   return Math.min(...(nums as number[]));
 }
 
-function fullSize (dims: Dimensions, { region, size }: { region: BoundingBox; size: { width?: number | null; height?: number | null; fit?: 'fill' | 'inside' } }) {
+function fillMissingDimension (size: SizeDesc, aspect: number) {
+  if (!size.width && size.height != null) size.width = Math.floor((size.height) * aspect);
+  if (!size.height && size.width != null) size.height = Math.floor((size.width) / aspect);
+}
+
+function fullSize (dims: Dimensions, { region, size }: ParsedInfo) {
   const regionAspect = region.width / region.height;
   if (!size.width && !size.height) {
     throw new IIIFError('Must specify at least one of width or height', { statusCode: 400 });
   }
-  if (!size.height && size.width != null) size.height = Math.floor((size.width as number) / regionAspect);
-  if (!size.width && size.height != null) size.width = Math.floor((size.height as number) * regionAspect);
+  fillMissingDimension(size, regionAspect);
   const scaleFactor = (size.width as number) / region.width;
   const result = { width: Math.floor(dims.width * scaleFactor), height: Math.floor(dims.height * scaleFactor) };
   debug('Region %j at size %j yields full size %j, a scale factor of %f', region, size, result, scaleFactor);

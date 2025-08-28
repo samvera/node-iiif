@@ -1,3 +1,4 @@
+import { Dimensions } from '../types';
 import { Formats, Qualities } from '../calculator/v2';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Debug from 'debug';
@@ -36,7 +37,7 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
     maxWidth: max?.width,
     maxHeight: max?.height,
     maxArea: max?.area
-  } as any;
+  };
 
   return {
     '@context': 'http://iiif.io/api/image/2/context.json',
@@ -46,7 +47,7 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
     height,
     sizes,
     tiles: [
-      { width: 512, height: 512, scaleFactors: sizes.map((_v: any, i: number) => 2 ** i) }
+      { width: 512, height: 512, scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i) }
     ],
     profile: [profileLink, { ...IIIFProfile, ...maxAttrs }]
   };
