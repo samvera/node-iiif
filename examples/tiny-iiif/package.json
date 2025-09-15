@@ -1,11 +1,11 @@
 {
   "name": "tiny-iiif",
-  "version": "6.1.1-rc.0",
+  "version": "6.1.1-rc.1",
   "description": "Example server for node-iiif using @tinyhttp",
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "dev": "IIIF_IMAGE_PATH=./tiff nodemon",
+    "dev": "IIIF_IMAGE_PATH=${IIIF_IMAGE_PATH:-./tiff} nodemon",
     "lint": "eslint *.ts",
     "lint-fix": "eslint --fix *.ts",
     "tiny-iiif": "IIIF_IMAGE_PATH=./tiff tsx index.ts",
