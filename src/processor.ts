@@ -146,7 +146,8 @@ export class Processor {
 
     return await this.withStream({ id, baseUrl }, async (stream) => {
       stream.pipe(target);
-      const { width, height, pages } = await target.metadata();
+      const { autoOrient, ...metadata } = await target.metadata();
+      const { width, height, pages } = { ...metadata, ...autoOrient };
       if (!width || !height || !pages) return result;
       result.push({ width, height });
       for (page += 1; page < pages; page++) {

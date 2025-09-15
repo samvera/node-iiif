@@ -1,9 +1,9 @@
 {
-  "watch": ["../../dist"],
-  "ext": "js,json",
+  "watch": [".", "../.."],
+  "ext": "ts,js",
   "exec": "tsx index.ts",
-  "delay": "200ms",
-  "legacyWatch": true,
+  "delay": 2000,
+  "ignore": ["node_modules/", "./dist/"],
   "env": {
     "FORCE_COLOR": "1"
   }

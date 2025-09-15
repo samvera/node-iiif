@@ -1,11 +1,11 @@
 {
   "name": "tiny-iiif",
-  "version": "6.0.1",
+  "version": "6.1.1-rc.1",
   "description": "Example server for node-iiif using @tinyhttp",
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "dev": "IIIF_IMAGE_PATH=./tiff nodemon",
+    "dev": "IIIF_IMAGE_PATH=${IIIF_IMAGE_PATH:-./tiff} nodemon",
     "lint": "eslint *.ts",
     "lint-fix": "eslint --fix *.ts",
     "tiny-iiif": "IIIF_IMAGE_PATH=./tiff tsx index.ts",
@@ -34,11 +34,9 @@
     "iiif-processor": "../..",
     "openseadragon": "^5.0.1",
     "serve-static": "^1.16.2",
-    "sharp": "^0.33.5"
+    "sharp": "^0.34.4-rc.3"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2",
-    "tsx": "^4.16.0",
     "concurrently": "^9.0.1",
     "eslint": "^8.34.0",
     "eslint-config-standard": "^17.0.0",
@@ -46,6 +44,8 @@
     "eslint-plugin-jest": "^27.2.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.1.1",
-    "nodemon": "^2.0.21"
+    "nodemon": "^2.0.21",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.16.0"
   }
 }

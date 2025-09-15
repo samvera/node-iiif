@@ -90,7 +90,7 @@ export class Operations {
     const { format, quality, region, rotation: { flop, degree }, size } = this.info();
     scaleRegion(region, scale, this.pages[page]);
 
-    pipeline.extract(region).resize(size);
+    pipeline.autoOrient().extract(region).resize(size);
     if (flop) pipeline.flop();
     pipeline.rotate(degree);
     if (quality === 'gray') pipeline.grayscale();
