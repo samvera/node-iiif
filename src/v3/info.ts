@@ -9,21 +9,11 @@ export const profileLink = 'https://iiif.io/api/image/3/level2.json';
 const ComplianceProfile = {
   level: 'level2',
   uri: profileLink,
-  qualities: new Set(['default']),
-  formats: new Set(['jpg', 'png'])
+  qualities: new Set(Qualities),
+  formats: new Set(Formats)
 };
 
 const IIIFExtras = {
-  extraFormats: new Set(
-    Formats.filter(
-      (format) => !(ComplianceProfile.formats as Set<string>).has(format)
-    )
-  ),
-  extraQualities: new Set(
-    Qualities.filter(
-      (quality) => !(ComplianceProfile.qualities as Set<string>).has(quality)
-    )
-  ),
   extraFeatures: [
     'canonicalLinkHeader',
     'mirroring',
@@ -51,8 +41,6 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
     width,
     height,
     sizes,
-    extraFormats: [...(IIIFExtras.extraFormats as Set<string>)],
-    extraQualities: [...(IIIFExtras.extraQualities as Set<string>)],
     extraFeatures: IIIFExtras.extraFeatures,
     tiles: [
       {

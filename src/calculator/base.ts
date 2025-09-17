@@ -12,9 +12,15 @@ const IR = '\\d+';
 const FR = '\\d+(?:\\.\\d+)?';
 const PCTR = /^pct:(?<val>[\d.,]+)/;
 
+export const Formats = ['gif', 'jpg', 'tif', 'png', 'webp'];
+export const Qualities = ['color', 'gray', 'bitonal', 'default'];
+
+
+const extraFormats = ['jpeg', 'tiff'];
+
 const Validators: ValidatorMap = {
-  quality: ['color', 'gray', 'bitonal', 'default'],
-  format: ['jpg', 'jpeg', 'tif', 'tiff', 'png', 'webp'],
+  quality: Qualities,
+  format: [...Formats, ...extraFormats],
   region: ['full', 'square', `pct:${FR},${FR},${FR},${FR}`, `${IR},${IR},${IR},${IR}`],
   size: ['full', 'max', `pct:${FR}`, `${IR},`, `,${IR}`, `\\!?${IR},${IR}`],
   rotation: [`\\!?${FR}`],
@@ -312,8 +318,5 @@ function sizeWH (v: string | (number | null)[]) {
   }
   return result;
 }
-
-export const Qualities = Validators.quality;
-export const Formats = Validators.format;
 
 export default { Base, Qualities, Formats };
