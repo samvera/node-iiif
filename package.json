@@ -1,6 +1,6 @@
 {
   "name": "iiif-processor",
-  "version": "6.1.2",
+  "version": "6.1.3",
   "description": "IIIF 2.1 & 3.0 Image API modules for NodeJS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -14,6 +14,16 @@
       "require": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      }
+    },
+    "./calculator": {
+      "import": {
+        "types": "./dist/calculator.d.mts",
+        "default": "./dist/calculator.mjs"
+      },
+      "require": {
+        "types": "./dist/calculator.d.ts",
+        "default": "./dist/calculator.js"
       }
     }
   },
