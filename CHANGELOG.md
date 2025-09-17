@@ -2,6 +2,9 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v6.1.1
+- Auto-orient images based on EXIF orientation before transforming
+
 ##### v6.0.0
 - Complete refactor of entire library into TypeScript
 - StreamResolver is now Promise-only: the single-argument resolver must return a `Promise<ReadableStream>`; update examples and tests accordingly.

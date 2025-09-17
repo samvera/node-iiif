@@ -1,7 +1,7 @@
 {
   "name": "clover-ui",
   "private": true,
-  "version": "6.1.1-rc.1",
+  "version": "6.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
