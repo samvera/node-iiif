@@ -5,3 +5,4 @@ node_modules
 .vscode
 reports
 dist
+examples/**/package-lock.json

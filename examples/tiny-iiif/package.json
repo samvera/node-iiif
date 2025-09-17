@@ -34,16 +34,13 @@
     "iiif-processor": "../..",
     "openseadragon": "^5.0.1",
     "serve-static": "^1.16.2",
-    "sharp": "^0.34.4-rc.3"
+    "sharp": "^0.34.4"
   },
   "devDependencies": {
     "concurrently": "^9.0.1",
-    "eslint": "^8.34.0",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jest": "^27.2.1",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.1.1",
+    "@eslint/js": "^9.19.0",
+    "eslint": "^9.19.0",
+    "typescript-eslint": "^8.22.0",
     "nodemon": "^2.0.21",
     "ts-node": "^10.9.2",
     "tsx": "^4.16.0"

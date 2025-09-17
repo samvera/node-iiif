@@ -225,7 +225,7 @@ describe('dimension function', () => {
   it('passes the id and baseUrl to the function', () => {
     expect.assertions(2) // ensures our dimension function assertions are both executed in this test
 
-    const streamResolver = async ({ id, baseUrl }) => {
+    const streamResolver = async () => {
       return new Stream.Readable({
         read() {}
       });
