@@ -1,0 +1,15 @@
+---
+services:
+  tiny-iiif:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - IIIF_IMAGE_PATH=${IIIF_IMAGE_PATH}
+      - IMAGE_FILE_TEMPLATE=${IMAGE_FILE_TEMPLATE}
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    working_dir: /usr/src/app/examples/tiny-iiif
+    command: npm run dev
