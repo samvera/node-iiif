@@ -148,11 +148,16 @@ export class Processor {
       stream.pipe(target);
       const { autoOrient, ...metadata } = await target.metadata();
       const { width, height, pages } = { ...metadata, ...autoOrient };
-      if (!width || !height || !pages) return result;
+      if (!width || !height) return result;
       result.push({ width, height });
-      for (page += 1; page < pages; page++) {
-        const scale = 1 / 2 ** page;
-        result.push({ width: Math.floor(width * scale), height: Math.floor(height * scale) });
+      if (!isNaN(pages)) {
+        for (page += 1; page < pages; page++) {
+          const scale = 1 / 2 ** page;
+          result.push({
+            width: Math.floor(width * scale),
+            height: Math.floor(height * scale)
+          });
+        }
       }
       return result;
     }) as Dimensions[];
