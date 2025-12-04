@@ -6,13 +6,8 @@ import type { InfoDocInput, InfoDoc } from '../contracts';
 
 export const profileLink = 'https://iiif.io/api/image/3/level2.json';
 
-const ComplianceProfile = {
-  level: 'level2',
-  uri: profileLink,
-  qualities: new Set(Qualities),
-  formats: new Set(Formats)
-};
-
+const defaultFormats: Set<String> = new Set(['jpg', 'png']);
+const defaultQualities: Set<String> = new Set(['default']);
 const IIIFExtras = {
   extraFeatures: [
     'canonicalLinkHeader',
@@ -23,10 +18,18 @@ const IIIFExtras = {
     'sizeByForcedWh',
     'sizeByWhListed',
     'sizeUpscaling'
-  ]
+  ],
+  extraFormats: new Set(Formats.filter((f) => !defaultFormats.has(f))),
+  extraQualities: new Set(Qualities.filter((q) => !defaultQualities.has(q)))
 };
 
-export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoDoc {
+export function infoDoc({
+  id,
+  width,
+  height,
+  sizes,
+  max
+}: InfoDocInput): InfoDoc {
   const maxAttrs = {
     maxWidth: max?.width,
     maxHeight: max?.height,
@@ -38,10 +41,10 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
     id,
     type: 'ImageService3',
     protocol: 'http://iiif.io/api/image',
+    profile: 'level2',
     width,
     height,
     sizes,
-    extraFeatures: IIIFExtras.extraFeatures,
     tiles: [
       {
         width: 512,
@@ -49,7 +52,7 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
         scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i)
       }
     ],
-    profile: ComplianceProfile,
+    ...IIIFExtras,
     ...maxAttrs
   };
 }
