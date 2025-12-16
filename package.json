@@ -53,7 +53,8 @@
     "lint:fix": "eslint --fix \"{src,tests}/**/*.{js,ts}\"",
     "lint:examples": "cd examples/tiny-iiif && npm run lint",
     "test": "node scripts/test.js --env=node",
-    "test:coverage": "node scripts/test.js --env=node --coverage"
+    "test:coverage": "node scripts/test.js --env=node --coverage",
+    "validate": "concurrently -s !command-server -k -n server,iiif --hide server -c blue,green \"cd examples/tiny-iiif && npm run validator\" \"cd validator && sleep 2 && uv run ./run-validator.sh\""
   },
   "keywords": [
     "iiif",

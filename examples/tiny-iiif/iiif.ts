@@ -14,21 +14,39 @@ const streamImageFromFile = async ({ id }: { id: string }) => {
 };
 
 const render = async (req: any, res: any) => {
-  if (req.params && req.params.filename == null) {
-    req.params.filename = 'info.json';
-  }
+  try {
+    const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
+    const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, {
+      pathPrefix: iiifpathPrefix,
+      debugBorder: !!process.env.DEBUG_IIIF_BORDER
+    });
+    const result = await iiifProcessor.execute();
 
-  const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
-  const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, {
-    pathPrefix: iiifpathPrefix,
-    debugBorder: !!process.env.DEBUG_IIIF_BORDER
-  });
-  const result = await iiifProcessor.execute();
-  return res
-    .set('Content-Type', result.contentType)
-    .set('Link', [`<${(result as any).canonicalLink}>;rel="canonical"`, `<${(result as any).profileLink}>;rel="profile"`])
-    .status(200)
-    .send(result.body);
+    if (result.redirect) {
+      return res.redirect(result.location, 302);
+    }
+
+    if (result.error) {
+      return res
+        .set('Content-Type', 'text/plain')
+        .status(result.statusCode)
+        .send(result.message);
+    }
+
+    return res
+      .set('Content-Type', result.contentType)
+      .set('Link', [
+        `<${(result as any).canonicalLink}>;rel="canonical"`,
+        `<${(result as any).profileLink}>;rel="profile"`
+      ])
+      .status(200)
+      .send(result.body);
+  } catch (err) {
+    return res
+      .set('Content-Type', 'text/plain')
+      .status(err.statusCode || 500)
+      .send(err.message);
+  }
 };
 
 function createRouter (version: number) {

@@ -58,24 +58,44 @@ export class Base {
   }
 
   static parsePath (path: string) {
-    const transformation =
-      ['region', 'size', 'rotation']
-        .map((type: ValidatorKey) => this._validator(type))
-        .join('/') +
-      '/' +
-      this._validator('quality') +
-      '.' +
-      this._validator('format');
-    const re = new RegExp(
-      `^/?(?<id>.+?)/(?:(?<info>info.json)|${transformation})$`
+    debug('parsing IIIF path: %s', path);
+    const idOnlyRe = new RegExp('^/?(?<id>.+)/?$');
+    const infoJsonRe = new RegExp('^/?(?<id>.+)/(?<info>info.json)$');
+    const transformRe = new RegExp(
+      '^/?(?<id>.+)/(?<region>.+)/(?<size>.+)/(?<rotation>.+)/(?<quality>.+)\\.(?<format>.+)$'
     );
-    const result = re.exec(path)?.groups;
-    if (!result) {
-      throw new IIIFError(`Not a valid IIIF path: ${path}`, {
-        statusCode: 400
-      });
+
+    let result = transformRe.exec(path)?.groups;
+    debug('transform match result: %j', result);
+    if (result) {
+      for (const component of [
+        'region',
+        'size',
+        'rotation',
+        'quality',
+        'format'
+      ] as ValidatorKey[]) {
+        const validator = new RegExp(this._validator(component));
+        if (!validator.test(result[component] as string)) {
+          throw new IIIFError(`Invalid ${component} in IIIF path: ${path}`, {
+            statusCode: 400
+          });
+        }
+      }
+      return result;
     }
-    return result;
+
+    result = infoJsonRe.exec(path)?.groups;
+    debug('info.json match result: %j', result);
+    if (result) return result;
+
+    result = idOnlyRe.exec(path)?.groups;
+    debug('ID only match result: %j', result);
+    if (result) return result;
+
+    throw new IIIFError(`Not a valid IIIF path: ${path}`, {
+      statusCode: 400
+    });
   }
 
   constructor (dims: Dimensions, opts: CalculatorOptions = {}) {
@@ -187,11 +207,10 @@ export class Base {
     const max: MaxDimensions = { ...(this.opts?.max || {}) };
     max.height = max.height || max.width;
     this._parsedInfo.size =
-      ('left' in v) ? { width: v.width, height: v.height, fit: 'fill' } : { ...v };
+      'left' in v
+        ? { width: v.width, height: v.height, fit: 'fill' }
+        : { ...v };
     this._constrainSize(max);
-    if (!this._parsedInfo.upscale) {
-      this._constrainSize(this._sourceDims);
-    }
     return this;
   }
 

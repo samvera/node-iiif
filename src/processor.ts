@@ -263,10 +263,34 @@ export class Processor {
   }
 
   async execute () {
-    if (this.filename === 'info.json') {
-      return await this.infoJson();
-    } else {
+    try {
+      if (this.format === undefined && this.info === undefined) {
+        debug('No format or info.json requested; redirecting to info.json');
+        return {
+          location: new URL(
+            path.join(this.id, 'info.json'),
+            this.baseUrl
+          ).toString(),
+          redirect: true
+        };
+      }
+
+      if (this.filename === 'info.json') {
+        return await this.infoJson();
+      }
+
       return await this.iiifImage();
+    } catch (err) {
+      if (err instanceof IIIFError) {
+        debug('IIIFError caught: %j', err);
+        return {
+          error: true,
+          message: err.message,
+          statusCode: err.statusCode || 500
+        };
+      } else {
+        throw err;
+      }
     }
   }
 }
