@@ -58,6 +58,7 @@ export class Base {
   }
 
   static parsePath (path: string) {
+    path = decodeURIComponent(path);
     debug('parsing IIIF path: %s', path);
     const idOnlyRe = new RegExp('^/?(?<id>.+)/?$');
     const infoJsonRe = new RegExp('^/?(?<id>.+)/(?<info>info.json)$');
