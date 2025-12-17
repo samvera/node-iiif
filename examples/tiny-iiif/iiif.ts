@@ -27,31 +27,25 @@ const render = async (req: any, res: any) => {
       pathPrefix: iiifpathPrefix,
       debugBorder: !!process.env.DEBUG_IIIF_BORDER
     });
-    const response: ProcessorResult = await iiifProcessor.execute();
-    let result: ProcessorResult;
-
-    result = response as RedirectResult;
-    if (result.redirect) {
-      return res.redirect(result.location, 302);
+    const result: ProcessorResult = await iiifProcessor.execute();
+    switch (result.type) {
+      case 'content':
+        return res
+          .set('Content-Type', result.contentType)
+          .set('Link', [
+            `<${result.canonicalLink}>;rel="canonical"`,
+            `<${result.profileLink}>;rel="profile"`
+          ])
+          .status(200)
+          .send(result.body);
+      case 'redirect':
+        return res.redirect(result.location, 302);
+      case 'error':
+        return res
+          .set('Content-Type', 'text/plain')
+          .status(result.statusCode)
+          .send(result.message);
     }
-
-    result = response as ErrorResult;
-    if (result.error) {
-      return res
-        .set('Content-Type', 'text/plain')
-        .status(result.statusCode)
-        .send(result.message);
-    }
-
-    result = response as ContentResult;
-    return res
-      .set('Content-Type', result.contentType)
-      .set('Link', [
-        `<${result.canonicalLink}>;rel="canonical"`,
-        `<${result.profileLink}>;rel="profile"`
-      ])
-      .status(200)
-      .send(result.body);
   } catch (err) {
     return res
       .set('Content-Type', 'text/plain')

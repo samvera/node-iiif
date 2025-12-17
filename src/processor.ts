@@ -9,7 +9,10 @@ import type {
   Dimensions,
   MaxDimensions,
   ProcessorResult,
-  ResolvedDimensions
+  ResolvedDimensions,
+  ContentResult,
+  ErrorResult,
+  RedirectResult
 } from './types';
 import type { VersionModule } from './contracts';
 
@@ -18,29 +21,42 @@ const debugv = Debug('verbose:iiif-processor');
 
 const defaultpathPrefix = '/iiif/{{version}}/';
 
-function getIiifVersion (url: string, template: string) {
+function getIiifVersion(url: string, template: string) {
   const { origin, pathname } = new URL(url);
-  const templateMatcher = template.replace(/\{\{version\}\}/, '(?<iiifVersion>2|3)');
+  const templateMatcher = template.replace(
+    /\{\{version\}\}/,
+    '(?<iiifVersion>2|3)'
+  );
   const pathMatcher = `^(?<prefix>${templateMatcher})(?<request>.+)$`;
   const re = new RegExp(pathMatcher);
   const parsed = re.exec(pathname);
   if (parsed) {
     parsed.groups.prefix = origin + parsed.groups.prefix;
-    return { ...parsed.groups } as { prefix: string; iiifVersion: string; request: string };
+    return { ...parsed.groups } as {
+      prefix: string;
+      iiifVersion: string;
+      request: string;
+    };
   } else {
     throw new IIIFError('Invalid IIIF path');
   }
 }
 
-export type DimensionFunction = (input: { id: string; baseUrl: string }) => Promise<Dimensions | Dimensions[]>;
-export type StreamResolver = (input: { id: string; baseUrl: string }) => Promise<NodeJS.ReadableStream>;
+export type DimensionFunction = (input: {
+  id: string;
+  baseUrl: string;
+}) => Promise<Dimensions | Dimensions[]>;
+export type StreamResolver = (input: {
+  id: string;
+  baseUrl: string;
+}) => Promise<NodeJS.ReadableStream>;
 export type StreamResolverWithCallback = (
   input: { id: string; baseUrl: string },
   callback: (stream: NodeJS.ReadableStream) => Promise<unknown>
 ) => Promise<unknown>;
 export type ProcessorOptions = {
   dimensionFunction?: DimensionFunction;
-  max?: { width: number; height?: number, area?: number };
+  max?: { width: number; height?: number; area?: number };
   includeMetadata?: boolean;
   density?: number;
   debugBorder?: boolean;
@@ -248,7 +264,11 @@ export class Processor {
     const body = JSON.stringify(doc, (_key, value) =>
       value?.constructor === Set ? [...value] : value
     );
-    return { contentType: 'application/json', body } as const;
+    return {
+      type: 'content',
+      contentType: 'application/json',
+      body
+    } as ContentResult;
   }
 
   operations(dim: Dimensions[]) {
@@ -322,11 +342,12 @@ export class Processor {
       this.baseUrl
     );
     return {
+      type: 'content',
       canonicalLink: canonicalUrl.toString(),
       profileLink: this.Implementation.profileLink,
       contentType: mime.lookup(this.format) as string,
       body: result as Buffer
-    };
+    } as ContentResult;
   }
 
   async execute(): Promise<ProcessorResult> {
@@ -338,8 +359,8 @@ export class Processor {
             path.join(this.id, 'info.json'),
             this.baseUrl
           ).toString(),
-          redirect: true
-        };
+          type: 'redirect'
+        } as RedirectResult;
       }
 
       if (this.filename === 'info.json') {
@@ -351,10 +372,10 @@ export class Processor {
       if (err instanceof IIIFError) {
         debug('IIIFError caught: %j', err);
         return {
-          error: true,
+          type: 'error',
           message: err.message,
           statusCode: err.statusCode || 500
-        };
+        } as ErrorResult;
       } else {
         throw err;
       }

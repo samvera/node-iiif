@@ -84,7 +84,7 @@ describe('region', () => {
       streamResolver
     );
     const result = await subject.execute();
-    assert.strictEqual(result.error, true);
+    assert.strictEqual(result.type, 'error');
     assert.strictEqual(result.statusCode, 400);
     assert.match(result.message, /width and height must both be > 0/);
   });
@@ -106,7 +106,7 @@ describe('region', () => {
       streamResolver
     );
     const result = await subject.execute();
-    assert.strictEqual(result.error, true);
+    assert.strictEqual(result.type, 'error');
     assert.strictEqual(result.statusCode, 400);
     assert.match(result.message, /out of bounds/);
   });
@@ -127,7 +127,7 @@ describe('size', () => {
   it('should require valid size', async () => {
     subject = new Processor(`${base}/full/pct:0/0/default.png`, streamResolver);
     const result = await subject.execute();
-    assert.strictEqual(result.error, true);
+    assert.strictEqual(result.type, 'error');
     assert.strictEqual(result.statusCode, 400);
     assert.match(result.message, /Invalid resize/);
   });

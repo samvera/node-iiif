@@ -33,6 +33,7 @@ export type MaxDimensions = {
 export type Quality = 'color' | 'gray' | 'bitonal' | 'default';
 
 export type ContentResult = {
+  type: 'content';
   canonicalLink?: string;
   profileLink?: string;
   contentType: string;
@@ -40,12 +41,12 @@ export type ContentResult = {
 };
 
 export type RedirectResult = {
+  type: 'redirect';
   location: string;
-  redirect: boolean;
 };
 
 export type ErrorResult = {
-  error: boolean;
+  type: 'error';
   message: string;
   statusCode: number;
   location?: undefined;
