@@ -65,7 +65,11 @@ export class Base {
       '^/?(?<id>.+)/(?<region>.+)/(?<size>.+)/(?<rotation>.+)/(?<quality>.+)\\.(?<format>.+)$'
     );
 
-    let result = transformRe.exec(path)?.groups;
+    let result = infoJsonRe.exec(path)?.groups;
+    debug('info.json match result: %j', result);
+    if (result) return result;
+
+    result = transformRe.exec(path)?.groups;
     debug('transform match result: %j', result);
     if (result) {
       for (const component of [
@@ -84,10 +88,6 @@ export class Base {
       }
       return result;
     }
-
-    result = infoJsonRe.exec(path)?.groups;
-    debug('info.json match result: %j', result);
-    if (result) return result;
 
     result = idOnlyRe.exec(path)?.groups;
     debug('ID only match result: %j', result);
