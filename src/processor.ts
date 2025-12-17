@@ -5,7 +5,12 @@ import sharp from 'sharp';
 import { Operations } from './transform';
 import { IIIFError } from './error';
 import Versions from './versions';
-import type { Dimensions, MaxDimensions, ResolvedDimensions } from './types';
+import type {
+  Dimensions,
+  MaxDimensions,
+  ProcessorResult,
+  ResolvedDimensions
+} from './types';
 import type { VersionModule } from './contracts';
 
 const debug = Debug('iiif-processor:main');
@@ -75,8 +80,15 @@ export class Processor {
   debugBorder = false;
   pageThreshold?: number;
 
-  constructor (url: string, streamResolver: StreamResolver | StreamResolverWithCallback, opts: ProcessorOptions = {}) {
-    const { prefix, iiifVersion, request } = getIiifVersion(url, opts.pathPrefix || defaultpathPrefix);
+  constructor(
+    url: string,
+    streamResolver: StreamResolver | StreamResolverWithCallback,
+    opts: ProcessorOptions = {}
+  ) {
+    const { prefix, iiifVersion, request } = getIiifVersion(
+      url,
+      opts.pathPrefix || defaultpathPrefix
+    );
 
     if (typeof streamResolver !== 'function') {
       throw new IIIFError('streamResolver option must be specified');
@@ -91,12 +103,16 @@ export class Processor {
       density: null
     };
 
-    this
-      .setOpts({ ...defaults, iiifVersion, ...opts, prefix, request })
-      .initialize(streamResolver);
+    this.setOpts({
+      ...defaults,
+      iiifVersion,
+      ...opts,
+      prefix,
+      request
+    }).initialize(streamResolver);
   }
 
-  setOpts (opts) {
+  setOpts(opts) {
     this.dimensionFunction = opts.dimensionFunction;
     this.max = { ...opts.max };
     this.includeMetadata = !!opts.includeMetadata;
@@ -110,10 +126,12 @@ export class Processor {
     return this;
   }
 
-  initialize (streamResolver: StreamResolver | StreamResolverWithCallback) {
+  initialize(streamResolver: StreamResolver | StreamResolverWithCallback) {
     this.Implementation = Versions[this.version] as VersionModule;
     if (!this.Implementation) {
-      throw new IIIFError(`No implementation found for IIIF Image API v${this.version}`);
+      throw new IIIFError(
+        `No implementation found for IIIF Image API v${this.version}`
+      );
     }
 
     const params = this.Implementation.Calculator.parsePath(this.request);
@@ -129,22 +147,37 @@ export class Processor {
     return this;
   }
 
-  async withStream ({ id, baseUrl }: { id: string; baseUrl: string }, callback: (s: NodeJS.ReadableStream) => Promise<unknown>) {
+  async withStream(
+    { id, baseUrl }: { id: string; baseUrl: string },
+    callback: (s: NodeJS.ReadableStream) => Promise<unknown>
+  ) {
     debug('Requesting stream for %s', id);
     if (this.streamResolver.length === 2) {
-      return await (this.streamResolver as StreamResolverWithCallback)({ id, baseUrl }, callback);
+      return await (this.streamResolver as StreamResolverWithCallback)(
+        { id, baseUrl },
+        callback
+      );
     } else {
-      const stream = await (this.streamResolver as StreamResolver)({ id, baseUrl });
+      const stream = await (this.streamResolver as StreamResolver)({
+        id,
+        baseUrl
+      });
       return await callback(stream);
     }
   }
 
-  async defaultDimensionFunction ({ id, baseUrl }: { id: string; baseUrl: string }): Promise<Dimensions[]> {
+  async defaultDimensionFunction({
+    id,
+    baseUrl
+  }: {
+    id: string;
+    baseUrl: string;
+  }): Promise<Dimensions[]> {
     const result: Dimensions[] = [];
     let page = 0;
     const target = sharp({ limitInputPixels: false, page });
 
-    return await this.withStream({ id, baseUrl }, async (stream) => {
+    return (await this.withStream({ id, baseUrl }, async (stream) => {
       stream.pipe(target);
       const { autoOrient, ...metadata } = await target.metadata();
       const { width, height, pages } = { ...metadata, ...autoOrient };
@@ -160,18 +193,23 @@ export class Processor {
         }
       }
       return result;
-    }) as Dimensions[];
+    })) as Dimensions[];
   }
 
-  async dimensions (): Promise<Dimensions[]> {
-    const fallback = this.dimensionFunction !== this.defaultDimensionFunction.bind(this);
+  async dimensions(): Promise<Dimensions[]> {
+    const fallback =
+      this.dimensionFunction !== this.defaultDimensionFunction.bind(this);
 
     if (!this.sizeInfo) {
-      debug('Attempting to use dimensionFunction to retrieve dimensions for %j', this.id);
+      debug(
+        'Attempting to use dimensionFunction to retrieve dimensions for %j',
+        this.id
+      );
       const params = { id: this.id, baseUrl: this.baseUrl };
       let dims: ResolvedDimensions = await this.dimensionFunction(params);
       if (fallback && !dims) {
-        const warning = 'Unable to get dimensions for %s using custom function. Falling back to sharp.metadata().';
+        const warning =
+          'Unable to get dimensions for %s using custom function. Falling back to sharp.metadata().';
         debug(warning, this.id);
         console.warn(warning, this.id);
         dims = await this.defaultDimensionFunction(params);
@@ -182,10 +220,14 @@ export class Processor {
     return this.sizeInfo;
   }
 
-  async infoJson () {
+  async infoJson() {
     const [dim] = await this.dimensions();
     const sizes: Array<{ width: number; height: number }> = [];
-    for (let size = [dim.width, dim.height]; size.every((x) => x >= 64); size = size.map((x) => Math.floor(x / 2))) {
+    for (
+      let size = [dim.width, dim.height];
+      size.every((x) => x >= 64);
+      size = size.map((x) => Math.floor(x / 2))
+    ) {
       sizes.push({ width: size[0], height: size[1] });
     }
 
@@ -193,20 +235,31 @@ export class Processor {
     // Node's URL has readonly pathname in types; construct via join on new URL
     uri.pathname = path.join(uri.pathname, this.id);
     const id = uri.toString();
-    const doc = this.Implementation.infoDoc({ id, ...dim, sizes, max: this.max });
+    const doc = this.Implementation.infoDoc({
+      id,
+      ...dim,
+      sizes,
+      max: this.max
+    });
     for (const prop in doc) {
       if (doc[prop] === null || doc[prop] === undefined) delete doc[prop];
     }
 
-    const body = JSON.stringify(doc, (_key, value) => (value?.constructor === Set ? [...value] : value));
+    const body = JSON.stringify(doc, (_key, value) =>
+      value?.constructor === Set ? [...value] : value
+    );
     return { contentType: 'application/json', body } as const;
   }
 
-  operations (dim: Dimensions[]) {
+  operations(dim: Dimensions[]) {
     const sharpOpt = this.sharpOptions;
     const { max, pageThreshold } = this;
     debug('pageThreshold: %d', pageThreshold);
-    return new Operations(this.version, dim, { sharp: sharpOpt, max, pageThreshold })
+    return new Operations(this.version, dim, {
+      sharp: sharpOpt,
+      max,
+      pageThreshold
+    })
       .region(this.region)
       .size(this.size)
       .rotation(this.rotation)
@@ -215,16 +268,24 @@ export class Processor {
       .withMetadata(this.includeMetadata);
   }
 
-  async applyBorder (transformed: sharp.Sharp) {
+  async applyBorder(transformed: sharp.Sharp) {
     const buf = await transformed.toBuffer();
     const borderPipe = sharp(buf, { limitInputPixels: false });
     const { width, height } = await borderPipe.metadata();
     const background = { r: 255, g: 0, b: 0, alpha: 1 };
 
-    const topBorder = { create: { width, height: 1, channels: 4, background } as sharp.Create };
-    const bottomBorder = { create: { width, height: 1, channels: 4, background } as sharp.Create };
-    const leftBorder = { create: { width: 1, height, channels: 4, background } as sharp.Create };
-    const rightBorder = { create: { width: 1, height, channels: 4, background } as sharp.Create };
+    const topBorder = {
+      create: { width, height: 1, channels: 4, background } as sharp.Create
+    };
+    const bottomBorder = {
+      create: { width, height: 1, channels: 4, background } as sharp.Create
+    };
+    const leftBorder = {
+      create: { width: 1, height, channels: 4, background } as sharp.Create
+    };
+    const rightBorder = {
+      create: { width: 1, height, channels: 4, background } as sharp.Create
+    };
 
     return borderPipe.composite([
       { input: topBorder, left: 0, top: 0 },
@@ -234,26 +295,32 @@ export class Processor {
     ]);
   }
 
-  async iiifImage () {
+  async iiifImage() {
     debugv('Request %s', this.request);
     const dim = await this.dimensions();
     const operations = this.operations(dim);
     debugv('Operations: %j', operations);
     const pipeline = await operations.pipeline();
 
-    const result = await this.withStream({ id: this.id, baseUrl: this.baseUrl }, async (stream) => {
-      debug('piping stream to pipeline');
-      let transformed = await stream.pipe(pipeline);
-      if (this.debugBorder) {
-        transformed = await this.applyBorder(transformed);
+    const result = await this.withStream(
+      { id: this.id, baseUrl: this.baseUrl },
+      async (stream) => {
+        debug('piping stream to pipeline');
+        let transformed = await stream.pipe(pipeline);
+        if (this.debugBorder) {
+          transformed = await this.applyBorder(transformed);
+        }
+        debug('converting to buffer');
+        return await transformed.toBuffer();
       }
-      debug('converting to buffer');
-      return await transformed.toBuffer();
-    });
+    );
     debug('returning %d bytes', (result as Buffer).length);
     debug('baseUrl', this.baseUrl);
 
-    const canonicalUrl = new URL(path.join(this.id, operations.canonicalPath()), this.baseUrl);
+    const canonicalUrl = new URL(
+      path.join(this.id, operations.canonicalPath()),
+      this.baseUrl
+    );
     return {
       canonicalLink: canonicalUrl.toString(),
       profileLink: this.Implementation.profileLink,
@@ -262,7 +329,7 @@ export class Processor {
     };
   }
 
-  async execute () {
+  async execute(): Promise<ProcessorResult> {
     try {
       if (this.format === undefined && this.info === undefined) {
         debug('No format or info.json requested; redirecting to info.json');

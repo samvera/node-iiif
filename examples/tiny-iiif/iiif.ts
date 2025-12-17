@@ -1,5 +1,12 @@
 import { App } from '@tinyhttp/app';
-import { Processor, IIIFError } from 'iiif-processor';
+import {
+  Processor,
+  IIIFError,
+  ContentResult,
+  ErrorResult,
+  ProcessorResult,
+  RedirectResult
+} from 'iiif-processor';
 import fs from 'fs';
 import path from 'path';
 import { iiifImagePath, iiifpathPrefix, fileTemplate } from './config';
@@ -20,12 +27,15 @@ const render = async (req: any, res: any) => {
       pathPrefix: iiifpathPrefix,
       debugBorder: !!process.env.DEBUG_IIIF_BORDER
     });
-    const result = await iiifProcessor.execute();
+    const response: ProcessorResult = await iiifProcessor.execute();
+    let result: ProcessorResult;
 
+    result = response as RedirectResult;
     if (result.redirect) {
       return res.redirect(result.location, 302);
     }
 
+    result = response as ErrorResult;
     if (result.error) {
       return res
         .set('Content-Type', 'text/plain')
@@ -33,11 +43,12 @@ const render = async (req: any, res: any) => {
         .send(result.message);
     }
 
+    result = response as ContentResult;
     return res
       .set('Content-Type', result.contentType)
       .set('Link', [
-        `<${(result as any).canonicalLink}>;rel="canonical"`,
-        `<${(result as any).profileLink}>;rel="profile"`
+        `<${result.canonicalLink}>;rel="canonical"`,
+        `<${result.profileLink}>;rel="profile"`
       ])
       .status(200)
       .send(result.body);

@@ -6,4 +6,10 @@ export {
   Processor,
   ProcessorOptions
 } from './processor';
+export {
+  ContentResult,
+  RedirectResult,
+  ErrorResult,
+  ProcessorResult
+} from './types';
 export { Versions } from './versions';

@@ -130,18 +130,14 @@ describe('Calculator', () => {
     it ('does not upscale by default', () => {
       subject = new Calculator({ width: 1024, height: 768 });
 
-      const expected = {
-        region: { left: 512, top: 384, width: 256, height: 192 },
-        size: { fit: 'fill', width: 256, height: 192 },
-        rotation: { flop: false, degree: 45 },
-        quality: 'default',
-        format: { type: 'jpg', density: 600 },
-        fullSize: { width: 1024, height: 768 },
-        upscale: false
-      };
-
-      subject.region('pct:50,50,25,25').size('512,384').rotation('45').quality('default').format('jpg', 600);
-      assert.deepEqual(subject.info(), expected);
+      assert.throws(() => {
+        subject
+          .region('pct:50,50,25,25')
+          .size('512,384')
+          .rotation('45')
+          .quality('default')
+          .format('jpg', 600);
+      }, IIIFError);
     });
 
     it('upscales when requested', () => {
