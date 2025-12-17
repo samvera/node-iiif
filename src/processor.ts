@@ -266,7 +266,7 @@ export class Processor {
     );
     return {
       type: 'content',
-      contentType: 'application/json',
+      contentType: 'application/ld+json',
       body
     } as ContentResult;
   }
