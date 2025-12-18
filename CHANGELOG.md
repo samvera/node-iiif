@@ -2,6 +2,13 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v7.0.0
+- Made entire suite able to pass the [IIIF Image API Validator](https://iiif.io/api/image/validator/)
+- Added automatic redirect for requests that don't specify a transformation or `info.json`
+- Added return types for redirect and error as well as content, eliminating most situations in which `IIIFError` was thrown
+- Improved test suite
+- Added validator to test suite
+
 ##### v6.1.1
 - Auto-orient images based on EXIF orientation before transforming
 
