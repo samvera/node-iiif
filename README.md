@@ -129,6 +129,14 @@ The `pathPrefix` constructor option provides a tremendous amount of flexibility 
 
 ### Processing
 
+Primary processing is handled through the `Processor` class's `execute()` method. There are three possible return types:
+
+- `ContentResult` (`type: "content"`) - includes a `canonicalLink`, a `profileLink`, a `contentType`, and a `body`
+- `RedirectResult` (`type: "redirect"`) - includes a redirect `location` (used when the URL ends with the ID and should redirect to `info.json`)
+- `ErrorResult` (`type: "Error"`) - includes an HTTP-compatible `statusCode` (e.g., `400` for bad requests; `500` for unhandled errors) and a `message`
+
+In addition, certain error conditions may result in the throwing of an `IIIFError`, which also includes `statusCode` and `message` properties.
+
 #### Promise
 ```typescript
 import { Processor } from "iiif-processor";

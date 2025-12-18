@@ -49,8 +49,6 @@ export type ErrorResult = {
   type: 'error';
   message: string;
   statusCode: number;
-  location?: undefined;
-  redirect?: undefined;
 };
 
 export type ProcessorResult = ContentResult | RedirectResult | ErrorResult;
