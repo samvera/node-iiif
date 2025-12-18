@@ -198,7 +198,20 @@ describe('constructor errors', () => {
 
   it('requires a valid IIIF version', () => {
     assert.throws(() => {
-      return new Processor('https://example.org/iiif/0/ab/cd/ef/gh/i/info.json', identityResolver);
+      return new Processor(
+        'https://example.org/iiif/0/ab/cd/ef/gh/i/info.json',
+        identityResolver
+      );
+    }, IIIFError);
+  });
+
+  it('cannot have maxHeight without maxWidth', () => {
+    assert.throws(() => {
+      return new Processor(
+        `${base}/10,20,30,40/pct:50/45/default.tif`,
+        identityResolver,
+        { max: { height: 1000, width: undefined } }
+      );
     }, IIIFError);
   });
 });
@@ -245,3 +258,17 @@ describe('dimension function', () => {
     subject.execute();
   })
 })
+
+describe('redirect to info.json', () => {
+  it('redirects when no format or info.json is requested', async () => {
+    subject = new Processor(
+      `https://example.org/iiif/2/ab/cd/ef/gh/i`,
+      async () => new Stream.Readable({ read() {} })
+    );
+    const result = await subject.execute();
+    expect(result).toHaveProperty('location');
+    expect(result.location?.toString()).toEqual(
+      'https://example.org/iiif/2/ab/cd/ef/gh/i/info.json'
+    );
+  });
+});

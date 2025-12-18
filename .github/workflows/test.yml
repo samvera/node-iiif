@@ -25,7 +25,7 @@ jobs:
           node-version: ${{ matrix['node-version'] }}
           cache: 'npm'
       - name: Install dependencies
-        run: npm ci      
+        run: npm ci
       - name: JS Tests
         run: npm run test
   current-runtime:
@@ -49,25 +49,42 @@ jobs:
           node-version: lts/*
           cache: 'npm'
       - name: Install dependencies
-        run: npm ci      
+        run: npm ci
       - name: JS Tests
         run: npm run test:coverage
       - name: Send coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-  lint:
+  iiif-validator:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4      
+      - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'npm'      
+          cache: 'npm'
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          working-directory: "validator"
       - name: Install dependencies
-        run: npm ci      
+        run: npm ci && cd examples/tiny-iiif && npm i
+      - name: Run IIIF Validator
+        run: npm run validate
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
       - name: Type Check
-        run: npm run typecheck      
+        run: npm run typecheck
       - name: Lint
         run: npm run lint

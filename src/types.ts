@@ -31,3 +31,24 @@ export type MaxDimensions = {
 };
 
 export type Quality = 'color' | 'gray' | 'bitonal' | 'default';
+
+export type ContentResult = {
+  type: 'content';
+  canonicalLink?: string;
+  profileLink?: string;
+  contentType: string;
+  body: Buffer | string;
+};
+
+export type RedirectResult = {
+  type: 'redirect';
+  location: string;
+};
+
+export type ErrorResult = {
+  type: 'error';
+  message: string;
+  statusCode: number;
+};
+
+export type ProcessorResult = ContentResult | RedirectResult | ErrorResult;

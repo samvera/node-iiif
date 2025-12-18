@@ -6,8 +6,8 @@ import type { InfoDocInput, InfoDoc } from '../contracts';
 
 export const profileLink = 'https://iiif.io/api/image/3/level2.json';
 
-const defaultFormats: Set<String> = new Set(['jpg', 'png']);
-const defaultQualities: Set<String> = new Set(['default']);
+const defaultFormats: Set<string> = new Set(['jpg', 'png']);
+const defaultQualities: Set<string> = new Set(['default']);
 const IIIFExtras = {
   extraFeatures: [
     'canonicalLinkHeader',

@@ -5,7 +5,6 @@ import { describe, it, beforeEach, afterEach, jest } from '@jest/globals';
 import assert from 'assert';
 import fs from 'fs';
 import { Processor } from '../../src/processor';
-import { IIIFError } from '../../src/error';
 import Sharp from 'sharp';
 import values from '../fixtures/iiif-values';
 const { v3: { qualities, formats, regions, sizes, rotations } } = values as any;
@@ -59,15 +58,24 @@ describe('format', () => {
 describe('region', () => {
   regions.forEach((value) => {
     it(`should produce an image with region ${value}`, async () => {
-      subject = new Processor(`${base}/${value}/max/0/default.png`, streamResolver);
+      subject = new Processor(
+        `${base}/${value}/max/0/default.png`,
+        streamResolver
+      );
       const result = await subject.execute();
       assert.strictEqual(result.contentType, 'image/png');
     });
   });
 
   it('should require valid region size', async () => {
-    subject = new Processor(`${base}/0,0,0,0/max/0/default.png`, streamResolver);
-    assert.rejects(() => subject.execute(), IIIFError);
+    subject = new Processor(
+      `${base}/0,0,0,0/max/0/default.png`,
+      streamResolver
+    );
+    const result = await subject.execute();
+    assert.strictEqual(result.type, 'error');
+    assert.strictEqual(result.statusCode, 400);
+    assert.match(result.message, /width and height must both be > 0/);
   });
 
   it('constrains the region to the image bounds', async () => {
@@ -86,14 +94,20 @@ describe('region', () => {
       `${base}/700,0,627,540/max/0/default.png`,
       streamResolver
     );
-    assert.rejects(() => subject.execute(), IIIFError);
+    const result = await subject.execute();
+    assert.strictEqual(result.type, 'error');
+    assert.strictEqual(result.statusCode, 400);
+    assert.match(result.message, /out of bounds/);
   });
 });
 
 describe('size', () => {
   sizes.forEach((value) => {
     it(`should produce an image with size ${value}`, async () => {
-      subject = new Processor(`${base}/full/${value}/0/default.png`, streamResolver);
+      subject = new Processor(
+        `${base}/full/${value}/0/default.png`,
+        streamResolver
+      );
       const result = await subject.execute();
       assert.strictEqual(result.contentType, 'image/png');
     });
@@ -101,12 +115,18 @@ describe('size', () => {
 
   it('should require valid size', async () => {
     subject = new Processor(`${base}/full/pct:0/0/default.png`, streamResolver);
-    assert.rejects(() => subject.execute(), IIIFError);
+    const result = await subject.execute();
+    assert.strictEqual(result.type, 'error');
+    assert.strictEqual(result.statusCode, 400);
+    assert.match(result.message, /Invalid resize/);
   });
 
   it('should select the correct page for the size', async () => {
     let pipeline;
-    subject = new Processor(`${base}/full/pct:40/0/default.png`, streamResolver);
+    subject = new Processor(
+      `${base}/full/pct:40/0/default.png`,
+      streamResolver
+    );
     pipeline = await subject.operations(await subject.dimensions()).pipeline();
     assert.strictEqual(pipeline.options.input.page, 1);
   });
