@@ -19,7 +19,7 @@ export class Operations {
   private pageThreshold: number;
 
   constructor (version: number, dims: Dimensions[], opts: CalculatorOptions & { sharp?: Record<string, unknown>; pageThreshold?: number }) {
-    const { sharp, pageThreshold, ...rest } = opts || {};
+    const { sharp, pageThreshold, ...rest } = { ...opts };
     const Implementation: VersionModule = Versions[version];
     this.calculator = new Implementation.Calculator(dims[0], rest);
     this.pageThreshold = typeof pageThreshold === 'number' ? pageThreshold : DEFAULT_PAGE_THRESHOLD;
@@ -83,7 +83,10 @@ export class Operations {
   }
 
   pipeline (): SharpType {
-    const pipeline = Sharp({ limitInputPixels: false, ...(this.sharpOptions || {}) });
+    const pipeline = Sharp({
+      limitInputPixels: false,
+      ...{ ...this.sharpOptions }
+    });
     const { page, scale } = this.computePage();
     (pipeline as any).options.input.page = page; // eslint-disable-line @typescript-eslint/no-explicit-any
 

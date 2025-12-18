@@ -48,16 +48,16 @@ export class Base {
   protected _parsedInfo: ParsedInfo;
   protected _sourceDims: Dimensions;
 
-  static _matchers (): typeof Validators {
+  static _matchers(): typeof Validators {
     return Validators;
   }
 
-  static _validator (type: ValidatorKey) {
+  static _validator(type: ValidatorKey) {
     const result = this._matchers()[type].join('|');
     return `(?<${type}>${result})`;
   }
 
-  static parsePath (path: string) {
+  static parsePath(path: string) {
     path = decodeURIComponent(path);
     debug('parsing IIIF path: %s', path);
     const idOnlyRe = new RegExp('^/?(?<id>.+)/?$');
@@ -99,7 +99,7 @@ export class Base {
     });
   }
 
-  constructor (dims: Dimensions, opts: CalculatorOptions = {}) {
+  constructor(dims: Dimensions, opts: CalculatorOptions = {}) {
     this.dims = { ...dims };
     this.opts = { ...opts };
     this._sourceDims = { ...dims };
@@ -120,7 +120,7 @@ export class Base {
     };
   }
 
-  protected _validate (type: (keyof typeof Validators) | 'density', v: unknown) {
+  protected _validate(type: keyof typeof Validators | 'density', v: unknown) {
     if (type === 'density') return validateDensity(v);
     const re = new RegExp(`^${Base._validator(type)}$`);
     debug('validating %s %s against %s', type, v, re);
@@ -130,7 +130,7 @@ export class Base {
     return true;
   }
 
-  region (v: string) {
+  region(v: string) {
     this._validate('region', v);
     const pct = PCTR.exec(v);
     let isFull = false;
@@ -149,7 +149,7 @@ export class Base {
     return this;
   }
 
-  size (v: string) {
+  size(v: string) {
     this._validate('size', v);
     const pct = PCTR.exec(v);
     let isMax = false;
@@ -167,7 +167,7 @@ export class Base {
     return this;
   }
 
-  rotation (v: string) {
+  rotation(v: string) {
     this._validate('rotation', v);
     this._canonicalInfo.rotation = v;
     this._parsedInfo.rotation = {
@@ -177,14 +177,14 @@ export class Base {
     return this;
   }
 
-  quality (v: string) {
+  quality(v: string) {
     this._validate('quality', v);
     this._canonicalInfo.quality = v;
     this._parsedInfo.quality = v;
     return this;
   }
 
-  format (v: string, density?: number) {
+  format(v: string, density?: number) {
     this._validate('format', v);
     this._validate('density', density);
     this._canonicalInfo.format = v;
@@ -192,19 +192,19 @@ export class Base {
     return this;
   }
 
-  info (): Calculated {
+  info(): Calculated {
     return {
       ...this._parsedInfo,
       fullSize: fullSize(this._sourceDims, this._parsedInfo)
     } as Calculated;
   }
 
-  canonicalPath () {
+  canonicalPath() {
     const { region, size, rotation, quality, format } = this._canonicalInfo;
     return `${region}/${size}/${rotation}/${quality}.${format}`;
   }
 
-  protected _setSize (v: BoundingBox | SizeDesc) {
+  protected _setSize(v: BoundingBox | SizeDesc) {
     const max: MaxDimensions = { ...(this.opts?.max || {}) };
     max.height = max.height || max.width;
     this._parsedInfo.size =
@@ -215,7 +215,7 @@ export class Base {
     return this;
   }
 
-  protected _constrainSize (constraints: MaxDimensions) {
+  protected _constrainSize(constraints: MaxDimensions) {
     const full = fullSize(this._sourceDims, this._parsedInfo);
     const constraint = minNum(
       constraints.width / full.width,
@@ -236,13 +236,13 @@ export class Base {
     }
   }
 
-  protected _canonicalSize () {
+  protected _canonicalSize() {
     const { width, height } = this._parsedInfo.size;
-    const result = (width?.toString() || '') + ',' + (height?.toString() || '');
+    const result = `${width},${height}`;
     return this._parsedInfo.size.fit === 'inside' ? `!${result}` : result;
   }
 
-  protected _constrainRegion () {
+  protected _constrainRegion() {
     let { left, top, width, height } = this._parsedInfo.region;
     left = Math.max(left, 0);
     top = Math.max(top, 0);
@@ -255,30 +255,43 @@ export class Base {
   }
 }
 
-function minNum (...args: unknown[]) {
+function minNum(...args: unknown[]) {
   const nums = args.filter((arg) => typeof arg === 'number' && !isNaN(arg));
   return Math.min(...(nums as number[]));
 }
 
-function fillMissingDimension (size: SizeDesc, aspect: number) {
-  if (!size.width && size.height != null) size.width = Math.floor((size.height) * aspect);
-  if (!size.height && size.width != null) size.height = Math.floor((size.width) / aspect);
+function fillMissingDimension(size: SizeDesc, aspect: number) {
+  if (!size.width && size.height != null)
+    size.width = Math.floor(size.height * aspect);
+  if (!size.height && size.width != null)
+    size.height = Math.floor(size.width / aspect);
 }
 
-function fullSize (dims: Dimensions, { region, size }: ParsedInfo) {
+function fullSize(dims: Dimensions, { region, size }: ParsedInfo) {
   const regionAspect = region.width / region.height;
-  if (!size.width && !size.height) {
-    throw new IIIFError('Must specify at least one of width or height', { statusCode: 400 });
-  }
   fillMissingDimension(size, regionAspect);
   const scaleFactor = (size.width as number) / region.width;
-  const result = { width: Math.floor(dims.width * scaleFactor), height: Math.floor(dims.height * scaleFactor) };
-  debug('Region %j at size %j yields full size %j, a scale factor of %f', region, size, result, scaleFactor);
+  const result = {
+    width: Math.floor(dims.width * scaleFactor),
+    height: Math.floor(dims.height * scaleFactor)
+  };
+  debug(
+    'Region %j at size %j yields full size %j, a scale factor of %f',
+    region,
+    size,
+    result,
+    scaleFactor
+  );
   return result;
 }
 
-function regionSquare (dims: Dimensions): BoundingBox {
-  let result: BoundingBox = { left: 0, top: 0, width: dims.width, height: dims.height };
+function regionSquare(dims: Dimensions): BoundingBox {
+  let result: BoundingBox = {
+    left: 0,
+    top: 0,
+    width: dims.width,
+    height: dims.height
+  };
   if (dims.width !== dims.height) {
     const side = Math.min(dims.width, dims.height);
     result = { ...result, width: side, height: side };
@@ -294,24 +307,43 @@ function regionSquare (dims: Dimensions): BoundingBox {
   return result;
 }
 
-function regionPct (v: string, dims: Dimensions): BoundingBox {
+function regionPct(v: string, dims: Dimensions): BoundingBox {
   let x: number, y: number, w: number, h: number;
-  [x, y, w, h] = v.split(/\s*,\s*/).map((pct) => Number(pct) / 100.0) as [number, number, number, number];
-  [x, w] = [x, w].map((val) => Math.floor(dims.width * val)) as [number, number];
-  [y, h] = [y, h].map((val) => Math.floor(dims.height * val)) as [number, number];
+  [x, y, w, h] = v.split(/\s*,\s*/).map((pct) => Number(pct) / 100.0) as [
+    number,
+    number,
+    number,
+    number
+  ];
+  [x, w] = [x, w].map((val) => Math.floor(dims.width * val)) as [
+    number,
+    number
+  ];
+  [y, h] = [y, h].map((val) => Math.floor(dims.height * val)) as [
+    number,
+    number
+  ];
   return regionXYWH([x, y, w, h]);
 }
 
-function regionXYWH (v: string | number[]): BoundingBox {
-  const parts: number[] = typeof v === 'string' ? v.split(/\s*,\s*/).map((val) => Number(val)) : v;
-  const result: BoundingBox = { left: parts[0], top: parts[1], width: parts[2], height: parts[3] };
+function regionXYWH(v: string | number[]): BoundingBox {
+  const parts: number[] =
+    typeof v === 'string' ? v.split(/\s*,\s*/).map((val) => Number(val)) : v;
+  const result: BoundingBox = {
+    left: parts[0],
+    top: parts[1],
+    width: parts[2],
+    height: parts[3]
+  };
   if (result.width === 0 || result.height === 0) {
-    throw new IIIFError('Region width and height must both be > 0', { statusCode: 400 });
+    throw new IIIFError('Region width and height must both be > 0', {
+      statusCode: 400
+    });
   }
   return result;
 }
 
-function sizePct (v: string, dims: Dimensions) {
+function sizePct(v: string, dims: Dimensions) {
   const pct = Number(v);
   if (isNaN(pct) || pct <= 0) {
     throw new IIIFError(`Invalid resize %: ${v}`, { statusCode: 400 });
@@ -320,21 +352,20 @@ function sizePct (v: string, dims: Dimensions) {
   return sizeWH(`${width},`);
 }
 
-function sizeWH (v: string | (number | null)[]) {
+function sizeWH(v: string) {
   const result: SizeDesc = { fit: 'fill' };
-  let parts: (number | null)[];
-  if (typeof v === 'string') {
-    if (v[0] === '!') {
-      result.fit = 'inside';
-      v = v.slice(1);
-    }
-    parts = v.split(/\s*,\s*/).map((val) => (val === '' ? null : Number(val)));
-  } else {
-    parts = v;
+  if (v[0] === '!') {
+    result.fit = 'inside';
+    v = v.slice(1);
   }
+  const parts: (number | null)[] = v
+    .split(/\s*,\s*/)
+    .map((val) => (val === '' ? null : Number(val)));
   [result.width, result.height] = parts as [number | null, number | null];
   if (result.width === 0 || result.height === 0) {
-    throw new IIIFError('Resize width and height must both be > 0', { statusCode: 400 });
+    throw new IIIFError('Resize width and height must both be > 0', {
+      statusCode: 400
+    });
   }
   return result;
 }

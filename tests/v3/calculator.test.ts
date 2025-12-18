@@ -155,4 +155,29 @@ describe('Calculator', () => {
       assert.deepEqual(subject.info(), expected);
     });
   });
+
+  describe('density', () => {
+    it('returns the density when set', () => {
+      subject.format('png', 300);
+      assert.equal(subject.info().format.density, 300);
+    });
+
+    it('returns undefined when density is not set', () => {
+      subject.format('png');
+      assert.equal(subject.info().format.density, undefined);
+    });
+
+    it('handles explcit null', () => {
+      subject.format('png', null);
+      assert.equal(subject.info().format.density, undefined);
+    });
+  });
+
+  describe('fullSize', () => {
+    it('returns the full size of the image', () => {
+      subject = new Calculator({ width: 1024, height: 768 });
+      subject.region('50,50,50,50').size('25,25');
+      assert.deepEqual(subject.info().fullSize, { width: 512, height: 384 });
+    });
+  });
 });

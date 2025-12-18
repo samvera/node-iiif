@@ -25,7 +25,7 @@ function getIiifVersion(url: string, template: string) {
   const { origin, pathname } = new URL(url);
   const templateMatcher = template.replace(
     /\{\{version\}\}/,
-    '(?<iiifVersion>2|3)'
+    '(?<iiifVersion>\\d+)'
   );
   const pathMatcher = `^(?<prefix>${templateMatcher})(?<request>.+)$`;
   const re = new RegExp(pathMatcher);
@@ -60,7 +60,7 @@ export type ProcessorOptions = {
   includeMetadata?: boolean;
   density?: number;
   debugBorder?: boolean;
-  iiifVersion?: 2 | 3;
+  iiifVersion?: number;
   pageThreshold?: number;
   pathPrefix?: string;
   sharpOptions?: Record<string, unknown>;
@@ -75,7 +75,7 @@ export class Processor {
 
   id!: string;
   baseUrl!: string;
-  version!: 2 | 3;
+  version!: number;
   request!: string;
   streamResolver!: StreamResolver | StreamResolverWithCallback;
   filename?: string;
@@ -137,7 +137,7 @@ export class Processor {
     this.debugBorder = !!opts.debugBorder;
     this.pageThreshold = opts.pageThreshold;
     this.sharpOptions = { ...opts.sharpOptions };
-    this.version = Number(opts.iiifVersion) as 2 | 3;
+    this.version = Number(opts.iiifVersion);
     this.request = opts.request;
     return this;
   }

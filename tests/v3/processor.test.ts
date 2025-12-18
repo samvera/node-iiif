@@ -188,6 +188,16 @@ describe('constructor errors', () => {
       return new Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, identityResolver);
     }, IIIFError);
   });
+
+  it('cannot have maxHeight without maxWidth', () => {
+    assert.throws(() => {
+      return new Processor(
+        `${base}/10,20,30,40/pct:50/45/default.tif`,
+        identityResolver,
+        { max: { height: 1000, width: undefined } }
+      );
+    }, IIIFError);
+  });
 });
 
 describe('stream processor', () => {
@@ -232,3 +242,17 @@ describe('dimension function', () => {
     subject.execute();
   })
 })
+
+describe('redirect to info.json', () => {
+  it('redirects when no format or info.json is requested', async () => {
+    subject = new Processor(
+      `https://example.org/iiif/2/ab/cd/ef/gh/i`,
+      async () => new Stream.Readable({ read() {} })
+    );
+    const result = await subject.execute();
+    expect(result).toHaveProperty('location');
+    expect(result.location?.toString()).toEqual(
+      'https://example.org/iiif/2/ab/cd/ef/gh/i/info.json'
+    );
+  });
+});
