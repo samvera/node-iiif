@@ -154,6 +154,40 @@ describe('Calculator', () => {
       subject.region('pct:50,50,25,25').size('^512,384').rotation('45').quality('default').format('jpg', 600);
       assert.deepEqual(subject.info(), expected);
     });
+
+    it('allows best-fit sizing larger than source without upscaling error', () => {
+      subject = new Calculator({ width: 1024, height: 768 });
+
+      // !9000,9000 should not throw even though dimensions exceed source
+      assert.doesNotThrow(() => {
+        subject
+          .region('full')
+          .size('!9000,9000')
+          .rotation('0')
+          .quality('default')
+          .format('jpg');
+      }, IIIFError);
+
+      const result = subject.info();
+      assert.equal(result.size.fit, 'inside');
+      assert.equal(result.size.width, 9000);
+      assert.equal(result.size.height, 9000);
+      assert.equal(result.upscale, false);
+    });
+
+    it('throws upscaling error for exact size larger than source', () => {
+      subject = new Calculator({ width: 1024, height: 768 });
+
+      // 9000,9000 without ! should throw upscaling error
+      assert.throws(() => {
+        subject
+          .region('full')
+          .size('9000,9000')
+          .rotation('0')
+          .quality('default')
+          .format('jpg');
+      }, IIIFError);
+    });
   });
 
   describe('density', () => {

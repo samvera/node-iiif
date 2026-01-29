@@ -31,7 +31,7 @@ export class Calculator extends Base {
     }
     super.size(v);
     const { region, size, upscale } = this._parsedInfo;
-    if (!upscale) {
+    if (!upscale && size.fit !== 'inside') {
       if (size.width > region.width || size.height > region.height) {
         throw new IIIFError('Requested size requires upscaling', {
           statusCode: 400
