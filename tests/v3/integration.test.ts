@@ -33,6 +33,22 @@ describe('info.json', () => {
     assert.strictEqual(info.width, 621);
     assert.strictEqual(info.height, 327);
   });
+
+  it('handles a non-default port', async () => {
+    subject = new Processor(
+      `https://example.org:8080/iiif/2/ab/cd/ef/gh/i/info.json`,
+      streamResolver,
+      {
+        pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/'
+      }
+    );
+    const result = await subject.execute();
+    const info = JSON.parse(result.body);
+    assert.strictEqual(
+      info['@id'],
+      'https://example.org:8080/iiif/2/ab/cd/ef/gh/i'
+    );
+  });
 });
 
 describe('quality', () => {
