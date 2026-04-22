@@ -106,7 +106,8 @@
       "src/**/*.{js,ts}"
     ],
     "coveragePathIgnorePatterns": [
-      "<rootDir>/tsup.config.ts"
+      "<rootDir>/tsup.config.ts",
+      "src/tile-size.ts"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"

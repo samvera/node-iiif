@@ -1,12 +1,13 @@
 export { IIIFError } from './error';
 export {
-  DimensionFunction,
+  GeometryFunction,
   StreamResolver,
   StreamResolverWithCallback,
   Processor,
   ProcessorOptions
 } from './processor';
 export {
+  ImageGeometry,
   ContentResult,
   RedirectResult,
   ErrorResult,

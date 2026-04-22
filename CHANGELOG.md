@@ -39,7 +39,7 @@ Only features and major fixes are listed. Everything else can be considered a mi
 
 ##### v3.2.0
 - Major refactor to support multi-resolution source images
-- Backward-compatible overhaul of `dimensionFunction`
+- Backward-compatible overhaul of `geometryFunction`
 - Split `Calculator` out from `Operations` to make certain pre-transform information available with low overhead
 - Use `sharp.metadata()` instead of `probe-image-size` in default dimension function
 
@@ -65,8 +65,8 @@ Only features and major fixes are listed. Everything else can be considered a mi
   streamResolver({ id }) { }           // new
   streamResolver({ id }, callback) { } // new
 
-  dimensionFunction(id) { }            // old
-  dimensionFunction({ id }) { }        // new
+  geometryFunction(id) { }            // old
+  geometryFunction({ id }) { }        // new
   ```
 
   See [issue #19](https://github.com/samvera/node-iiif/issues/19) for context on why this change was made.

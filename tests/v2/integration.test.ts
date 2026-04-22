@@ -7,10 +7,13 @@ import fs from 'fs';
 import { Processor } from '../../src/processor';
 import Sharp from 'sharp';
 import values from '../fixtures/iiif-values';
-const { v2: { qualities, formats, regions, sizes, rotations } } = values as any;
+const {
+  v2: { qualities, formats, regions, sizes, rotations }
+} = values as any;
 
 const base = 'https://example.org/iiif/2/ab/cd/ef/gh/i';
-const streamResolver: any = async () => fs.createReadStream('./tests/fixtures/samvera.tif');
+const streamResolver: any = async () =>
+  fs.createReadStream('./tests/fixtures/samvera_256.tif');
 let subject;
 let consoleWarnMock;
 
@@ -154,7 +157,7 @@ describe('size', () => {
       `${base}/full/pct:40/0/default.png`,
       streamResolver
     );
-    pipeline = await subject.operations(await subject.dimensions()).pipeline();
+    pipeline = await subject.operations(await subject.geometry()).pipeline();
     assert.strictEqual(pipeline.options.input.page, 1);
   });
 
@@ -164,7 +167,7 @@ describe('size', () => {
       `${base}/full/312,165/0/default.png`,
       streamResolver
     );
-    pipeline = await subject.operations(await subject.dimensions()).pipeline();
+    pipeline = await subject.operations(await subject.geometry()).pipeline();
     assert.strictEqual(pipeline.options.input.page, 1);
 
     subject = new Processor(
@@ -172,7 +175,7 @@ describe('size', () => {
       streamResolver,
       { pageThreshold: 0 }
     );
-    pipeline = await subject.operations(await subject.dimensions()).pipeline();
+    pipeline = await subject.operations(await subject.geometry()).pipeline();
     assert.strictEqual(pipeline.options.input.page, 0);
   });
 });
@@ -180,7 +183,10 @@ describe('size', () => {
 describe('rotation', () => {
   rotations.forEach((value) => {
     it(`should produce an image with rotation ${value}`, async () => {
-      subject = new Processor(`${base}/full/full/${value}/default.png`, streamResolver);
+      subject = new Processor(
+        `${base}/full/full/${value}/default.png`,
+        streamResolver
+      );
       const result = await subject.execute();
       assert.strictEqual(result.contentType, 'image/png');
     });
@@ -189,22 +195,24 @@ describe('rotation', () => {
 
 describe('IIIF transformation', () => {
   beforeEach(() => {
-    consoleWarnMock = jest.spyOn(global.console, 'warn').mockImplementation(() => undefined);
+    consoleWarnMock = jest
+      .spyOn(global.console, 'warn')
+      .mockImplementation(() => undefined);
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
-      { dimensionFunction: () => null }
+      { geometryFunction: async () => ({}) }
     );
   });
-    
+
   afterEach(() => {
     consoleWarnMock.mockRestore();
   });
-    
+
   it('transforms the image', async () => {
     const result = await subject.execute();
     const size = await Sharp(result.body).metadata();
-    
+
     assert(result.canonicalLink);
     assert(result.profileLink);
     assert.strictEqual(size.width, 25);
@@ -212,14 +220,14 @@ describe('IIIF transformation', () => {
     assert.strictEqual(size.format, 'png');
   });
 });
-  
+
 describe('Two-argument streamResolver', () => {
   beforeEach(() => {
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.png`,
-      async ({id, baseUrl}, callback) => { 
-        const stream = await streamResolver({id, baseUrl});
-        return callback(stream); 
+      async ({ id, baseUrl }, callback) => {
+        const stream = await streamResolver({ id, baseUrl });
+        return callback(stream);
       }
     );
   });
@@ -244,7 +252,9 @@ describe('Debug border', () => {
   });
 
   it('should add a border when `debugBorder` is specified', async () => {
-    subject = new Processor(`${base}/full/full/0/default.png`, streamResolver, { debugBorder: true });
+    subject = new Processor(`${base}/full/full/0/default.png`, streamResolver, {
+      debugBorder: true
+    });
     const result = await subject.execute();
     const image = await Sharp(result.body).removeAlpha().raw().toBuffer();
     const pixel = image.readUInt32LE(0);

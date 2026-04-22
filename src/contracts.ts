@@ -1,4 +1,12 @@
-import type { BoundingBox, Dimensions, Format, IIIFSpec, MaxDimensions, Quality } from './types';
+import type {
+  BoundingBox,
+  Dimensions,
+  Format,
+  IIIFSpec,
+  ImageGeometry,
+  MaxDimensions,
+  Quality
+} from './types';
 
 export interface Calculated {
   region: BoundingBox;
@@ -28,9 +36,7 @@ export type CalculatorCtor = {
 
 export interface InfoDocInput {
   id: string;
-  width: number;
-  height: number;
-  sizes: Dimensions[];
+  geometry: ImageGeometry;
   max?: MaxDimensions;
 }
 
