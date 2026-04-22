@@ -122,15 +122,18 @@ Any information not included will be calculated or probed for, if possible. For 
 | `width`, `height`, `sizes` | `pages`           |                            |
 | `width`, `height`, `pages` | `sizes`           |                            |
 
-Tile size information is independent of dimension and page information. If either `tileWidth` or `tileHeight` is
-left `undefined`, the image stream will be probed for them, which can be an expensive operation. If both are
-provided – even if they are `null` – the given values will be used. `null` values will be replaced by a default
-value of `256` when rendering the information document (`info.json`) for an image.
+#### Tile Size
 
+Tile size information is independent of dimension and page information, and is only checked
+when rendering the image information document (`info.json`). If either `tileWidth` or `tileHeight`
+is left `undefined` by the Geometry Function, the image stream will be probed for them, which 
+can be an expensive operation. If both are provided – even if they are `null` – the given values 
+will be used. (`null` values will be replaced by a default value of `256` when rendering the
+information document).
 
-The following example shows a Geometry Function that looks up the width, height, and number of pages in the target
-image in a database and returns them along with hardcoded tile sizes. The `sizes` array will be automatically
-calculated by the processor.
+The following example shows a Geometry Function that looks up the width, height, and number of 
+pages in the target image in a database and returns them along with hardcoded tile sizes. The 
+`sizes` array will be automatically calculated by the processor.
 
 ```typescript
 async function geometryFunction({ id: string, baseUrl: string }): Promise<ImageGeometry> {

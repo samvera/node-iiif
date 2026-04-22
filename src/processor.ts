@@ -182,7 +182,7 @@ export class Processor {
     }
   }
 
-  async geometry(): Promise<ImageGeometry> {
+  async geometry(includeTile = false): Promise<ImageGeometry> {
     if (!this.imageGeometry) {
       debug(
         'Attempting to use geometryFunction to retrieve dimensions for %j',
@@ -192,6 +192,10 @@ export class Processor {
       let geometry: ImageGeometry = {};
       if (this.geometryFunction) {
         geometry = await this.geometryFunction(params);
+      }
+      if (!(geometry.tileWidth && geometry.tileHeight) && !includeTile) {
+        geometry.tileWidth = null;
+        geometry.tileHeight = null;
       }
       geometry = await readGeometry(
         (callback) => this.withStream(params, callback),
@@ -203,7 +207,7 @@ export class Processor {
   }
 
   async infoJson() {
-    const geometry = await this.geometry();
+    const geometry = await this.geometry(true);
     const uri = new URL(this.baseUrl);
     // Node's URL has readonly pathname in types; construct via join on new URL
     uri.pathname = path.join(uri.pathname, this.id);
