@@ -1,12 +1,5 @@
 import { App } from '@tinyhttp/app';
-import {
-  Processor,
-  IIIFError,
-  ContentResult,
-  ErrorResult,
-  ProcessorResult,
-  RedirectResult
-} from 'iiif-processor';
+import { Processor, IIIFError, ProcessorResult } from 'iiif-processor';
 import fs from 'fs';
 import path from 'path';
 import { iiifImagePath, iiifpathPrefix, fileTemplate } from './config';
@@ -54,12 +47,15 @@ const render = async (req: any, res: any) => {
   }
 };
 
-function createRouter (version: number) {
+function createRouter(version: number) {
   const router = new App();
 
   router.use((_req, res, next) => {
     res.set('Access-Control-Allow-Headers', '*');
-    res.set('Access-Control-Allow-Methods', 'OPTIONS, HEAD, GET, POST, PUT, DELETE');
+    res.set(
+      'Access-Control-Allow-Methods',
+      'OPTIONS, HEAD, GET, POST, PUT, DELETE'
+    );
     res.set('Access-Control-Allow-Origin', '*');
     next();
   });
@@ -67,7 +63,9 @@ function createRouter (version: number) {
   router.options('*', (_req, res) => {
     res.status(204).send('');
   });
-  router.get('/', (_req, res) => res.status(200).send(`IIIF v${version}.x endpoint OK`));
+  router.get('/', (_req, res) =>
+    res.status(200).send(`IIIF v${version}.x endpoint OK`)
+  );
   router.get('/:id', render);
   router.get('/:id/info.json', render);
   router.get('/:id/:region/:size/:rotation/:filename', render);

@@ -2,6 +2,13 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v8.0.0
+- **BREAKING CHANGE**: `DimensionFunction` has been replaced with `GeometryFunction`, changing
+  both the option name and the shape of the expected return value
+- Can now probe the image stream for tile size information
+- Information document (`info.json`) is now rendered using tile size information from the image
+  (or from the `GeometryFunction`), falling back to a default of 256
+
 ##### v7.0.0
 - Made entire suite able to pass the [IIIF Image API Validator](https://iiif.io/api/image/validator/)
 - Added automatic redirect for requests that don't specify a transformation or `info.json`

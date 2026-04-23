@@ -24,6 +24,15 @@ export type IIIFSpec = {
   density?: number;
 };
 
+export type ImageGeometry = {
+  width?: number;
+  height?: number;
+  pages?: number;
+  sizes?: Dimensions[];
+  tileWidth?: number;
+  tileHeight?: number;
+};
+
 export type MaxDimensions = {
   width?: number;
   height?: number;

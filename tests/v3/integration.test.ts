@@ -7,16 +7,21 @@ import fs from 'fs';
 import { Processor } from '../../src/processor';
 import Sharp from 'sharp';
 import values from '../fixtures/iiif-values';
-const { v3: { qualities, formats, regions, sizes, rotations } } = values as any;
+const {
+  v3: { qualities, formats, regions, sizes, rotations }
+} = values as any;
 
 const base = 'https://example.org/iiif/3/ab/cd/ef/gh/i';
-const streamResolver: any = () => fs.createReadStream('./tests/fixtures/samvera.tif');
+const streamResolver: any = () =>
+  fs.createReadStream('./tests/fixtures/samvera_256.tif');
 let subject;
 let consoleWarnMock;
 
 describe('info.json', () => {
   it('produces a valid info.json', async () => {
-    subject = new Processor(`${base}/info.json`, streamResolver, { pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' });
+    subject = new Processor(`${base}/info.json`, streamResolver, {
+      pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/'
+    });
     const result = await subject.execute();
     const info = JSON.parse(result.body);
     assert.strictEqual(info.id, 'https://example.org/iiif/3/ab/cd/ef/gh/i');
@@ -26,7 +31,10 @@ describe('info.json', () => {
   });
 
   it('respects max size options', async () => {
-    subject = new Processor(`${base}/info.json`, streamResolver, { pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/', max: { width: 600 } });
+    subject = new Processor(`${base}/info.json`, streamResolver, {
+      pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/',
+      max: { width: 600 }
+    });
     const result = await subject.execute();
     const info = JSON.parse(result.body);
     assert.strictEqual(info.maxWidth, 600);
@@ -54,7 +62,10 @@ describe('info.json', () => {
 describe('quality', () => {
   qualities.forEach((value) => {
     it(`should produce an image with quality ${value}`, async () => {
-      subject = new Processor(`${base}/full/max/0/${value}.png`, streamResolver);
+      subject = new Processor(
+        `${base}/full/max/0/${value}.png`,
+        streamResolver
+      );
       const result = await subject.execute();
       assert.strictEqual(result.contentType, 'image/png');
     });
@@ -64,7 +75,10 @@ describe('quality', () => {
 describe('format', () => {
   formats.forEach((value) => {
     it(`should produce an image with format ${value}`, async () => {
-      subject = new Processor(`${base}/full/max/0/default.${value}`, streamResolver);
+      subject = new Processor(
+        `${base}/full/max/0/default.${value}`,
+        streamResolver
+      );
       const result = await subject.execute();
       assert.match(result.contentType, /^image\//);
     });
@@ -143,7 +157,7 @@ describe('size', () => {
       `${base}/full/pct:40/0/default.png`,
       streamResolver
     );
-    pipeline = await subject.operations(await subject.dimensions()).pipeline();
+    pipeline = await subject.operations(await subject.geometry()).pipeline();
     assert.strictEqual(pipeline.options.input.page, 1);
   });
 });
@@ -151,7 +165,10 @@ describe('size', () => {
 describe('rotation', () => {
   rotations.forEach((value) => {
     it(`should produce an image with rotation ${value}`, async () => {
-      subject = new Processor(`${base}/full/max/${value}/default.png`, streamResolver);
+      subject = new Processor(
+        `${base}/full/max/${value}/default.png`,
+        streamResolver
+      );
       const result = await subject.execute();
       assert.strictEqual(result.contentType, 'image/png');
     });
@@ -160,35 +177,37 @@ describe('rotation', () => {
 
 describe('IIIF transformation', () => {
   beforeEach(() => {
-    consoleWarnMock = jest.spyOn(global.console, 'warn').mockImplementation(() => undefined);
+    consoleWarnMock = jest
+      .spyOn(global.console, 'warn')
+      .mockImplementation(() => undefined);
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.png`,
       streamResolver,
-      { dimensionFunction: () => null }
+      { geometryFunction: async () => ({}) }
     );
   });
-    
+
   afterEach(() => {
     consoleWarnMock.mockRestore();
   });
-    
+
   it('transforms the image', async () => {
     const result = await subject.execute();
     const size = await Sharp(result.body).metadata();
-    
+
     assert.strictEqual(size.width, 25);
     assert.strictEqual(size.height, 25);
     assert.strictEqual(size.format, 'png');
   });
 });
-  
+
 describe('Two-argument streamResolver', () => {
   beforeEach(() => {
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.png`,
-      ({id, baseUrl}, callback) => { 
-        const stream = streamResolver({id, baseUrl});
-        return callback(stream); 
+      ({ id, baseUrl }, callback) => {
+        const stream = streamResolver({ id, baseUrl });
+        return callback(stream);
       }
     );
   });
@@ -213,7 +232,9 @@ describe('Debug border', () => {
   });
 
   it('should add a border when `debugBorder` is specified', async () => {
-    subject = new Processor(`${base}/full/max/0/default.png`, streamResolver, { debugBorder: true });
+    subject = new Processor(`${base}/full/max/0/default.png`, streamResolver, {
+      debugBorder: true
+    });
     const result = await subject.execute();
     const image = await Sharp(result.body).removeAlpha().raw().toBuffer();
     const pixel = image.readUInt32LE(0);

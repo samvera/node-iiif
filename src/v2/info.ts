@@ -32,13 +32,14 @@ const IIIFProfile = {
   ])
 };
 
-export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoDoc {
+export function infoDoc({ id, geometry, max }: InfoDocInput): InfoDoc {
   const maxAttrs = {
     maxWidth: max?.width,
     maxHeight: max?.height,
     maxArea: max?.area
   };
 
+  const { width, height, sizes } = geometry;
   return {
     '@context': 'http://iiif.io/api/image/2/context.json',
     '@id': id,
@@ -47,7 +48,11 @@ export function infoDoc ({ id, width, height, sizes, max }: InfoDocInput): InfoD
     height,
     sizes,
     tiles: [
-      { width: 512, height: 512, scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i) }
+      {
+        width: geometry.tileWidth,
+        height: geometry.tileHeight,
+        scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i)
+      }
     ],
     profile: [profileLink, { ...IIIFProfile, ...maxAttrs }]
   };

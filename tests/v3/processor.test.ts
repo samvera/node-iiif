@@ -9,12 +9,20 @@ import { Processor } from '../../src/processor';
 
 let subject;
 const base = 'https://example.org/iiif/3/ab/cd/ef/gh/i';
-const dims = [{ width: 1024, height: 768 }];
-const identityResolver = async (_input) => new Stream.Readable({ read () {} });
+const geometry = {
+  width: 1024,
+  height: 768,
+  pages: 1,
+  sizes: [{ width: 1024, height: 768 }]
+};
+const identityResolver = async (_input) => new Stream.Readable({ read() {} });
 
 describe('IIIF Processor', () => {
   beforeEach(() => {
-    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.png`, identityResolver);
+    subject = new Processor(
+      `${base}/10,20,30,40/pct:50/45/default.png`,
+      identityResolver
+    );
   });
 
   it('Parse URL', () => {
@@ -28,7 +36,7 @@ describe('IIIF Processor', () => {
   });
 
   it('Create pipeline', async () => {
-    const pipe = await subject.operations(dims).pipeline();
+    const pipe = await subject.operations(geometry).pipeline();
     const opts = pipe.options;
 
     assert.strictEqual(opts.width, 15);
@@ -39,7 +47,7 @@ describe('IIIF Processor', () => {
   });
 });
 
-describe("Minimum width and height", () => {
+describe('Minimum width and height', () => {
   beforeEach(() => {
     subject = new Processor(
       `${base}/8192,0,7,5466/1,342/0/default.jpg`,
@@ -47,16 +55,21 @@ describe("Minimum width and height", () => {
     );
   });
 
-  it("Avoids having a width or height < 1", async () => {
-    const dims = [
-      { width: 8199, height: 5466 },
-      { width: 4099, height: 2733 },
-      { width: 2049, height: 1366 },
-      { width: 1024, height: 683 },
-      { width: 512, height: 341 },
-      { width: 256, height: 170 }
-    ];
-    const pipe = await subject.operations(dims).pipeline();
+  it('Avoids having a width or height < 1', async () => {
+    const geometry = {
+      width: 8199,
+      height: 5466,
+      pages: 6,
+      sizes: [
+        { width: 8199, height: 5466 },
+        { width: 4099, height: 2733 },
+        { width: 2049, height: 1366 },
+        { width: 1024, height: 683 },
+        { width: 512, height: 341 },
+        { width: 256, height: 170 }
+      ]
+    };
+    const pipe = await subject.operations(geometry).pipeline();
     const opts = pipe.options;
     assert.notEqual(opts.width, 0);
     assert.notEqual(opts.height, 0);
@@ -73,7 +86,7 @@ describe('Include metadata', () => {
   });
 
   it('Includes preexisting metadata', async () => {
-    const pipe = await subject.operations(dims).pipeline();
+    const pipe = await subject.operations(geometry).pipeline();
     const opts = pipe.options;
 
     assert.notEqual(opts.keepMetadata, 0);
@@ -82,11 +95,14 @@ describe('Include metadata', () => {
 
 describe('TIFF Download', () => {
   beforeEach(() => {
-    subject = new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, identityResolver);
+    subject = new Processor(
+      `${base}/10,20,30,40/pct:50/45/default.tif`,
+      identityResolver
+    );
   });
 
   it('Output TIFF format', async () => {
-    const pipe = await subject.operations(dims).pipeline();
+    const pipe = await subject.operations(geometry).pipeline();
     const opts = pipe.options;
 
     assert.strictEqual(opts.width, 15);
@@ -101,7 +117,7 @@ describe('Density', () => {
     subject = (ext) => {
       return new Processor(
         `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.${ext}`,
-        async () => new Stream.Readable({ read () {} }),
+        async () => new Stream.Readable({ read() {} }),
         { density: 600 }
       );
     };
@@ -109,7 +125,7 @@ describe('Density', () => {
 
   it('Adds density to TIFF', async () => {
     const processor = subject('tif');
-    const pipe = await processor.operations(dims).pipeline();
+    const pipe = await processor.operations(geometry).pipeline();
     const opts = pipe.options;
 
     assert.strictEqual(opts.tiffXres, 600 / 25.4);
@@ -118,7 +134,7 @@ describe('Density', () => {
 
   it('Adds density to JPEG', async () => {
     const processor = subject('jpg');
-    const pipe = await processor.operations(dims).pipeline();
+    const pipe = await processor.operations(geometry).pipeline();
     const opts = pipe.options;
 
     assert.strictEqual(opts.withMetadataDensity, 600);
@@ -126,7 +142,7 @@ describe('Density', () => {
 
   it('Adds density to PNG', async () => {
     const processor = subject('png');
-    const pipe = await processor.operations(dims).pipeline();
+    const pipe = await processor.operations(geometry).pipeline();
     const opts = pipe.options;
 
     assert.strictEqual(opts.withMetadataDensity, 600);
@@ -139,15 +155,25 @@ describe('constructor', () => {
       width: 1000,
       height: 1000,
       area: 10000
-    }
+    };
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
-      async () => new Stream.Readable({ read () {} }),
-      { dimensionFunction: () => Promise.resolve({width: 1024, height: 768}), max, includeMetadata: true, density: 600 }
+      async () => new Stream.Readable({ read() {} }),
+      {
+        geometryFunction: () =>
+          Promise.resolve({ width: 1024, height: 768, pages: 1 }),
+        max,
+        includeMetadata: true,
+        density: 600
+      }
     );
 
     assert.equal(typeof subject.streamResolver, 'function');
-    expect(subject.dimensionFunction()).resolves.toEqual({width: 1024, height: 768});
+    expect(subject.geometryFunction()).resolves.toEqual({
+      width: 1024,
+      height: 768,
+      pages: 1
+    });
     assert.strictEqual(subject.max.width, 1000);
     assert.strictEqual(subject.max.height, 1000);
     assert.strictEqual(subject.max.area, 10000);
@@ -157,35 +183,41 @@ describe('constructor', () => {
 
   it('properly handles custom sharp options', async () => {
     let pipe;
-    
+
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
-      async () => new Stream.Readable({ read () {} }),
+      async () => new Stream.Readable({ read() {} }),
       { sharpOptions: { sequentialRead: false } }
     );
-    pipe = await subject.operations(dims).pipeline();
+    pipe = await subject.operations(geometry).pipeline();
     assert.strictEqual(pipe.options.input.sequentialRead, false);
-    
+
     subject = new Processor(
       `${base}/10,20,30,40/pct:50/45/default.tif`,
-      async () => new Stream.Readable({ read () {} }),
+      async () => new Stream.Readable({ read() {} }),
       { sharpOptions: { sequentialRead: true } }
     );
-    pipe = await subject.operations(dims).pipeline();
+    pipe = await subject.operations(geometry).pipeline();
     assert.strictEqual(pipe.options.input.sequentialRead, true);
-  })
+  });
 });
 
 describe('constructor errors', () => {
   it('requires a streamResolver', () => {
     assert.throws(() => {
-      return new Processor(`${base}/10,20,30,40/pct:50/45/default.tif`, {} as any);
+      return new Processor(
+        `${base}/10,20,30,40/pct:50/45/default.tif`,
+        {} as any
+      );
     }, IIIFError);
   });
 
   it('requires a valid URL', () => {
     assert.throws(() => {
-      return new Processor(`${base}/10,20,30,40/pct:50/45/default.blargh`, identityResolver);
+      return new Processor(
+        `${base}/10,20,30,40/pct:50/45/default.blargh`,
+        identityResolver
+      );
     }, IIIFError);
   });
 
@@ -202,7 +234,7 @@ describe('constructor errors', () => {
 
 describe('stream processor', () => {
   it('passes the id and baseUrl to the function', () => {
-    expect.assertions(2) // ensures our streamResolver assertions are both executed in this test
+    expect.assertions(2); // ensures our streamResolver assertions are both executed in this test
 
     const streamResolver = async ({ id, baseUrl }) => {
       expect(id).toEqual('i');
@@ -211,37 +243,41 @@ describe('stream processor', () => {
       return new Stream.Readable({
         read() {}
       });
-    }
+    };
 
-    const subject = new Processor(`https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`, streamResolver, {pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/'});
+    const subject = new Processor(
+      `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
+      streamResolver,
+      { pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' }
+    );
     subject.execute();
-  })
-})
+  });
+});
 
-describe('dimension function', () => {
+describe('geometry function', () => {
   it('passes the id and baseUrl to the function', () => {
-    expect.assertions(2) // ensures our dimension function assertions are both executed in this test
+    expect.assertions(2); // ensures our geometry function assertions are both executed in this test
 
     const streamResolver = async () => {
       return new Stream.Readable({
         read() {}
       });
-    }
+    };
 
-    const dimensionFunction = async ({ id, baseUrl }) => {
+    const geometryFunction = async ({ id, baseUrl }) => {
       expect(id).toEqual('i');
       expect(baseUrl).toEqual('https://example.org/iiif/3/ab/cd/ef/gh/');
-      return { width: 100, height: 100 }
+      return { width: 100, height: 100, pages: 1 };
     };
 
     const subject = new Processor(
       `https://example.org/iiif/3/ab/cd/ef/gh/i/10,20,30,40/pct:50/45/default.png`,
       streamResolver as any,
-      { dimensionFunction, pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' }
+      { geometryFunction, pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/' }
     );
     subject.execute();
-  })
-})
+  });
+});
 
 describe('redirect to info.json', () => {
   it('redirects when no format or info.json is requested', async () => {

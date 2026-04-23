@@ -25,7 +25,7 @@ const processor = new Processor(url, streamResolver, opts);
 * `url` (string, required) - the URL of the IIIF resource to process
 * `streamResolver` (async function, required) – returns a Promise of a readable image stream for a given request ([see below](#stream-resolver)); the legacy two-argument callback form is deprecated
 * `opts`:
-  * `dimensionFunction` (function) – a callback function that returns the image dimensions for a given request ([see below](#dimension-function))
+  * `geometryFunction` (function) – a callback function that returns the image geometry for a given request ([see below](#geometry-function))
   * `max` (object) – optional maximum size constraints of an image that can be returned
     * `width` (integer) - the maximum pixel width of the returned image
     * `height` (integer) - the maximum pixel height of the returned image
@@ -90,32 +90,61 @@ Note: The two-argument callback form is still supported but deprecated; prefer t
 promise-based resolver shown above. If you currently return a stream synchronously,
 wrap it with `Promise.resolve()` or mark your function `async`.
 
-### Dimension Function
+### Geometry Function
 
-The calling function can also supply the processor with an optional Dimension callback that takes information about the request [(`id` and `baseUrl`)](#id--baseurl) and returns the dimensions of the source image. This allows for caching dimensions and avoiding an expensive image request.
+The calling function can also supply the processor with an optional Geometry callback that takes information about the request [(`id` and `baseUrl`)](#id--baseurl) and returns information about the geometry of the source image. This allows for caching dimensions and other information, and avoiding an expensive image request.
 
-The function should return either:
-
-* a `{width: w, height: h}` object indicating the dimensions of the source image
-* an array of `{width: w, height: h}` objects indicating the dimensions of all of the pages available within the source image, if it is a multi-resolution image (e.g., a pyramidal TIFF), e.g.:
-  ```
-  [
-    { width: 14499, height: 12069 },
-    { width: 7249, height: 6034 },
-    { width: 3624, height: 3017 },
-    { width: 1812, height: 1508 },
-    { width: 906, height: 754 },
-    { width: 453, height: 377 },
-    { width: 226, height: 188 }
-  ]
-  ```
-
-Providing the dimensions of all available pages allows the processor to choose the most efficient starting image for the size requested.
+The function should return an object conforming to the `ImageGeometry` type, for example:
 
 ```typescript
-async function dimensionFunction({ id: string, baseUrl: string }): Promise<Dimensions | Dimensions[]> {
+{
+  width: 4096,
+  height: 3072,
+  pages: 6,
+  sizes: [
+    {width: 4096, height: 3072},
+    {width: 2048, height: 1536},
+    {width: 1024, height: 768},
+    {width: 512, height: 384},
+    {width: 256, height: 192},
+    {width: 128, height: 96}
+  ],
+  tileWidth: 128,
+  tileHeight: 128
+}
+```
+
+Any information not included will be calculated or probed for, if possible. For example:
+
+| Fields Provided            | Fields Calculated | Fields Probed              |
+| -------------------------- | ----------------- | -------------------------- |
+| none                       | `sizes`           | `width`, `height`, `pages` |
+| `width`, `height`, `sizes` | `pages`           |                            |
+| `width`, `height`, `pages` | `sizes`           |                            |
+
+#### Tile Size
+
+Tile size information is independent of dimension and page information, and is only checked
+when rendering the image information document (`info.json`). If either `tileWidth` or `tileHeight`
+is left `undefined` by the Geometry Function, the image stream will be probed for them, which 
+can be an expensive operation. If both are provided – even if they are `null` – the given values 
+will be used. (`null` values will be replaced by a default value of `256` when rendering the
+information document).
+
+The following example shows a Geometry Function that looks up the width, height, and number of 
+pages in the target image in a database and returns them along with hardcoded tile sizes. The 
+`sizes` array will be automatically calculated by the processor.
+
+```typescript
+async function geometryFunction({ id: string, baseUrl: string }): Promise<ImageGeometry> {
   let dimensions = lookDimensionsUpInDatabase(id);
-  return { width: dimensions.width, height: dimensions.height };
+  return { 
+    width: dimensions.width, 
+    height: dimensions.height,
+    pages: dimensions.pages,
+    tileWidth: 128,
+    tileHeight: 128
+  };
 }
 ```
 
@@ -142,7 +171,7 @@ In addition, certain error conditions may result in the throwing of an `IIIFErro
 import { Processor } from "iiif-processor";
 
 let url = "http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg"
-let processor = new Processor(url, streamResolver, { dimensionFunction });
+let processor = new Processor(url, streamResolver, { geometryFunction });
 processor.execute()
   .then(result => handleResult(result))
   .catch(err => handleError(err));
@@ -153,7 +182,7 @@ processor.execute()
 import { Processor } from "iiif-processor";
 
 let url = "http://iiif.example.com/iiif/2/abcdefgh/full/400,/0/default.jpg"
-let processor = new Processor(url, streamResolver, { dimensionFunction });
+let processor = new Processor(url, streamResolver, { geometryFunction });
 try {
   return await processor.execute();
 } catch (err) {

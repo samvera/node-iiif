@@ -2,14 +2,14 @@ import Debug from 'debug';
 import mime from 'mime-types';
 import path from 'path';
 import sharp from 'sharp';
+import { calculateGeometry, readGeometry } from './geometry';
 import { Operations } from './transform';
 import { IIIFError } from './error';
 import Versions from './versions';
 import type {
-  Dimensions,
   MaxDimensions,
+  ImageGeometry,
   ProcessorResult,
-  ResolvedDimensions,
   ContentResult,
   ErrorResult,
   RedirectResult
@@ -42,10 +42,10 @@ function getIiifVersion(url: string, template: string) {
   }
 }
 
-export type DimensionFunction = (input: {
+export type GeometryFunction = (input: {
   id: string;
   baseUrl: string;
-}) => Promise<Dimensions | Dimensions[]>;
+}) => Promise<ImageGeometry>;
 export type StreamResolver = (input: {
   id: string;
   baseUrl: string;
@@ -55,7 +55,7 @@ export type StreamResolverWithCallback = (
   callback: (stream: NodeJS.ReadableStream) => Promise<unknown>
 ) => Promise<unknown>;
 export type ProcessorOptions = {
-  dimensionFunction?: DimensionFunction;
+  geometryFunction?: GeometryFunction;
   max?: { width: number; height?: number; area?: number };
   includeMetadata?: boolean;
   density?: number;
@@ -70,7 +70,7 @@ export type ProcessorOptions = {
 export class Processor {
   private errorClass = IIIFError;
   private Implementation!: VersionModule;
-  private sizeInfo?: Dimensions[];
+  private imageGeometry?: ImageGeometry;
   private sharpOptions?: Record<string, unknown>;
 
   id!: string;
@@ -89,7 +89,7 @@ export class Processor {
   format!: string;
 
   // options
-  dimensionFunction!: DimensionFunction;
+  geometryFunction!: GeometryFunction;
   max?: MaxDimensions;
   includeMetadata = false;
   density?: number | null;
@@ -115,7 +115,7 @@ export class Processor {
     }
 
     const defaults = {
-      dimensionFunction: this.defaultDimensionFunction.bind(this),
+      geometryFunction: null,
       density: null
     };
 
@@ -129,7 +129,7 @@ export class Processor {
   }
 
   setOpts(opts) {
-    this.dimensionFunction = opts.dimensionFunction;
+    this.geometryFunction = opts.geometryFunction;
     this.max = { ...opts.max };
     this.includeMetadata = !!opts.includeMetadata;
     this.density = opts.density;
@@ -163,10 +163,8 @@ export class Processor {
     return this;
   }
 
-  async withStream(
-    { id, baseUrl }: { id: string; baseUrl: string },
-    callback: (s: NodeJS.ReadableStream) => Promise<unknown>
-  ) {
+  async withStream(callback: (s: NodeJS.ReadableStream) => Promise<unknown>) {
+    const { id, baseUrl } = this;
     debug('Requesting stream for %s', id);
     if (this.streamResolver.length === 2) {
       return await (this.streamResolver as StreamResolverWithCallback)(
@@ -182,79 +180,36 @@ export class Processor {
     }
   }
 
-  async defaultDimensionFunction({
-    id,
-    baseUrl
-  }: {
-    id: string;
-    baseUrl: string;
-  }): Promise<Dimensions[]> {
-    const result: Dimensions[] = [];
-    let page = 0;
-    const target = sharp({ limitInputPixels: false, page });
-
-    return (await this.withStream({ id, baseUrl }, async (stream) => {
-      stream.pipe(target);
-      const { autoOrient, ...metadata } = await target.metadata();
-      const { width, height, pages } = { ...metadata, ...autoOrient };
-      if (!width || !height) return result;
-      result.push({ width, height });
-      if (!isNaN(pages)) {
-        for (page += 1; page < pages; page++) {
-          const scale = 1 / 2 ** page;
-          result.push({
-            width: Math.floor(width * scale),
-            height: Math.floor(height * scale)
-          });
-        }
-      }
-      return result;
-    })) as Dimensions[];
-  }
-
-  async dimensions(): Promise<Dimensions[]> {
-    const fallback =
-      this.dimensionFunction !== this.defaultDimensionFunction.bind(this);
-
-    if (!this.sizeInfo) {
+  async geometry(includeTile = false): Promise<ImageGeometry> {
+    if (!this.imageGeometry) {
       debug(
-        'Attempting to use dimensionFunction to retrieve dimensions for %j',
+        'Attempting to use geometryFunction to retrieve dimensions for %j',
         this.id
       );
       const params = { id: this.id, baseUrl: this.baseUrl };
-      let dims: ResolvedDimensions = await this.dimensionFunction(params);
-      if (fallback && !dims) {
-        const warning =
-          'Unable to get dimensions for %s using custom function. Falling back to sharp.metadata().';
-        debug(warning, this.id);
-        console.warn(warning, this.id);
-        dims = await this.defaultDimensionFunction(params);
+      let geometry: ImageGeometry = {};
+      if (this.geometryFunction) {
+        geometry = await this.geometryFunction(params);
       }
-      if (!Array.isArray(dims)) dims = [dims];
-      this.sizeInfo = dims as Dimensions[];
+      if (!(geometry.tileWidth && geometry.tileHeight) && !includeTile) {
+        geometry.tileWidth = null;
+        geometry.tileHeight = null;
+      }
+      geometry = await readGeometry(this.withStream.bind(this), geometry);
+      this.imageGeometry = calculateGeometry(geometry);
     }
-    return this.sizeInfo;
+    return this.imageGeometry;
   }
 
   async infoJson() {
-    const [dim] = await this.dimensions();
-    const sizes: Array<{ width: number; height: number }> = [];
-    for (
-      let size = [dim.width, dim.height];
-      size.every((x) => x >= 64);
-      size = size.map((x) => Math.floor(x / 2))
-    ) {
-      sizes.push({ width: size[0], height: size[1] });
-    }
-
+    const geometry = await this.geometry(true);
     const uri = new URL(this.baseUrl);
     // Node's URL has readonly pathname in types; construct via join on new URL
     uri.pathname = path.join(uri.pathname, this.id);
     const id = uri.toString();
     const doc = this.Implementation.infoDoc({
       id,
-      ...dim,
-      sizes,
+      geometry,
       max: this.max
     });
     for (const prop in doc) {
@@ -271,11 +226,11 @@ export class Processor {
     } as ContentResult;
   }
 
-  operations(dim: Dimensions[]) {
+  operations({ sizes }: ImageGeometry) {
     const sharpOpt = this.sharpOptions;
     const { max, pageThreshold } = this;
     debug('pageThreshold: %d', pageThreshold);
-    return new Operations(this.version, dim, {
+    return new Operations(this.version, sizes, {
       sharp: sharpOpt,
       max,
       pageThreshold
@@ -317,23 +272,20 @@ export class Processor {
 
   async iiifImage() {
     debugv('Request %s', this.request);
-    const dim = await this.dimensions();
-    const operations = this.operations(dim);
+    const geometry = await this.geometry();
+    const operations = this.operations(geometry);
     debugv('Operations: %j', operations);
     const pipeline = await operations.pipeline();
 
-    const result = await this.withStream(
-      { id: this.id, baseUrl: this.baseUrl },
-      async (stream) => {
-        debug('piping stream to pipeline');
-        let transformed = await stream.pipe(pipeline);
-        if (this.debugBorder) {
-          transformed = await this.applyBorder(transformed);
-        }
-        debug('converting to buffer');
-        return await transformed.toBuffer();
+    const result = await this.withStream(async (stream) => {
+      debug('piping stream to pipeline');
+      let transformed = await stream.pipe(pipeline);
+      if (this.debugBorder) {
+        transformed = await this.applyBorder(transformed);
       }
-    );
+      debug('converting to buffer');
+      return await transformed.toBuffer();
+    });
     debug('returning %d bytes', (result as Buffer).length);
     debug('baseUrl', this.baseUrl);
 
