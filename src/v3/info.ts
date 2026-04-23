@@ -6,7 +6,6 @@ import type { InfoDocInput, InfoDoc } from '../contracts';
 
 export const profileLink = 'https://iiif.io/api/image/3/level2.json';
 
-const DEFAULT_TILE_SIZE = 512;
 const defaultFormats: Set<string> = new Set(['jpg', 'png']);
 const defaultQualities: Set<string> = new Set(['default']);
 const IIIFExtras = {
@@ -32,6 +31,15 @@ export function infoDoc({ id, geometry, max }: InfoDocInput): InfoDoc {
   };
 
   const { width, height, sizes } = geometry;
+  const tiles = geometry.tileWidth
+    ? [
+        {
+          width: geometry.tileWidth,
+          height: geometry.tileHeight || geometry.tileWidth,
+          scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i)
+        }
+      ]
+    : undefined;
   return {
     '@context': 'http://iiif.io/api/image/3/context.json',
     id,
@@ -41,13 +49,7 @@ export function infoDoc({ id, geometry, max }: InfoDocInput): InfoDoc {
     width,
     height,
     sizes,
-    tiles: [
-      {
-        width: geometry.tileWidth || DEFAULT_TILE_SIZE,
-        height: geometry.tileHeight || DEFAULT_TILE_SIZE,
-        scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i)
-      }
-    ],
+    tiles,
     ...IIIFExtras,
     ...maxAttrs
   };

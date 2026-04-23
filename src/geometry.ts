@@ -12,8 +12,8 @@ export async function readGeometry(
   withStream: (callback: StreamCallback) => Promise<unknown>,
   geometry: ImageGeometry
 ): Promise<ImageGeometry> {
-  let metadata = {};
-  let tileSize = {};
+  let metadata = {} as ImageGeometry;
+  let tileSize = {} as ImageGeometry;
   const result = { ...geometry };
 
   debug('Initial geometry: %O', geometry);
@@ -26,10 +26,11 @@ export async function readGeometry(
     await withStream(async (metadataStream) => {
       metadata = await readMetadata(metadataStream);
     });
+    if (!metadata.pages) metadata.pages = 1;
     debug('Read metadata: %O', metadata);
   }
 
-  if (geometry.tileWidth === undefined || geometry.tileHeight === undefined) {
+  if (geometry.tileWidth === undefined) {
     await withStream(async (sizeStream) => {
       const size = await getTileSize(sizeStream);
       tileSize = { tileWidth: size.width, tileHeight: size.height };

@@ -150,6 +150,20 @@ describe('Geometry', () => {
       });
     });
 
+    it('handles single-resolution, non-tiled file types', async () => {
+      const streamer = async (callback) => {
+        await callback(fs.createReadStream('./tests/fixtures/samvera.jpg'));
+      };
+      const result = await readGeometry(streamer, {});
+      expect(result).toEqual({
+        width: 621,
+        height: 327,
+        pages: 1,
+        tileWidth: null,
+        tileHeight: null
+      });
+    });
+
     it('leaves tile size undefined if it cannot be read', async () => {
       const streamer = async (callback) => {
         await callback(fs.createReadStream('./tests/fixtures/samvera.tif'));

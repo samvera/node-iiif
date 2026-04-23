@@ -40,6 +40,15 @@ export function infoDoc({ id, geometry, max }: InfoDocInput): InfoDoc {
   };
 
   const { width, height, sizes } = geometry;
+  const tiles = geometry.tileWidth
+    ? [
+        {
+          width: geometry.tileWidth,
+          height: geometry.tileHeight || geometry.tileWidth,
+          scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i)
+        }
+      ]
+    : undefined;
   return {
     '@context': 'http://iiif.io/api/image/2/context.json',
     '@id': id,
@@ -47,13 +56,7 @@ export function infoDoc({ id, geometry, max }: InfoDocInput): InfoDoc {
     width,
     height,
     sizes,
-    tiles: [
-      {
-        width: geometry.tileWidth,
-        height: geometry.tileHeight,
-        scaleFactors: sizes.map((_v: Dimensions, i: number) => 2 ** i)
-      }
-    ],
+    tiles,
     profile: [profileLink, { ...IIIFProfile, ...maxAttrs }]
   };
 }

@@ -128,8 +128,8 @@ Tile size information is independent of dimension and page information, and is o
 when rendering the image information document (`info.json`). If either `tileWidth` or `tileHeight`
 is left `undefined` by the Geometry Function, the image stream will be probed for them, which 
 can be an expensive operation. If both are provided – even if they are `null` – the given values 
-will be used. (`null` values will be replaced by a default value of `256` when rendering the
-information document).
+will be used. If tile sizes are `null`, the `tiles` property will be omitted from the information
+document.
 
 The following example shows a Geometry Function that looks up the width, height, and number of 
 pages in the target image in a database and returns them along with hardcoded tile sizes. The 
@@ -137,7 +137,7 @@ pages in the target image in a database and returns them along with hardcoded ti
 
 ```typescript
 async function geometryFunction({ id: string, baseUrl: string }): Promise<ImageGeometry> {
-  let dimensions = lookDimensionsUpInDatabase(id);
+  let dimensions = lookDimensionsUpInDatabase(id, baseUrl);
   return { 
     width: dimensions.width, 
     height: dimensions.height,

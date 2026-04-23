@@ -28,6 +28,9 @@ describe('info.json', () => {
     assert.strictEqual(info.maxWidth, undefined);
     assert.strictEqual(info.width, 621);
     assert.strictEqual(info.height, 327);
+    assert(info.tiles);
+    assert.strictEqual(info.tiles[0].width, 256);
+    assert.strictEqual(info.tiles[0].height, 256);
   });
 
   it('respects max size options', async () => {
@@ -56,6 +59,19 @@ describe('info.json', () => {
       info['@id'],
       'https://example.org:8080/iiif/2/ab/cd/ef/gh/i'
     );
+  });
+
+  it('omits tile information when the image is not tiled', async () => {
+    const streamResolver: any = async () =>
+      fs.createReadStream('./tests/fixtures/samvera.tif');
+
+    subject = new Processor(`${base}/info.json`, streamResolver, {
+      pathPrefix: '/iiif/{{version}}/ab/cd/ef/gh/',
+      max: { width: 100 }
+    });
+    const result = await subject.execute();
+    const info = JSON.parse(result.body);
+    assert.strictEqual(info.tiles, undefined);
   });
 });
 
