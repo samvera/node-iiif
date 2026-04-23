@@ -2,6 +2,13 @@
 
 Only features and major fixes are listed. Everything else can be considered a minor bugfix or maintenance release.
 
+##### v8.0.0
+- **BREAKING CHANGE**: `DimensionFunction` has been replaced with `GeometryFunction`, changing
+  both the option name and the shape of the expected return value
+- Can now probe the image stream for tile size information
+- Information document (`info.json`) is now rendered using tile size information from the image
+  (or from the `GeometryFunction`), falling back to a default of 256
+
 ##### v7.0.0
 - Made entire suite able to pass the [IIIF Image API Validator](https://iiif.io/api/image/validator/)
 - Added automatic redirect for requests that don't specify a transformation or `info.json`
@@ -39,7 +46,7 @@ Only features and major fixes are listed. Everything else can be considered a mi
 
 ##### v3.2.0
 - Major refactor to support multi-resolution source images
-- Backward-compatible overhaul of `geometryFunction`
+- Backward-compatible overhaul of `dimensionFunction`
 - Split `Calculator` out from `Operations` to make certain pre-transform information available with low overhead
 - Use `sharp.metadata()` instead of `probe-image-size` in default dimension function
 
@@ -65,8 +72,8 @@ Only features and major fixes are listed. Everything else can be considered a mi
   streamResolver({ id }) { }           // new
   streamResolver({ id }, callback) { } // new
 
-  geometryFunction(id) { }            // old
-  geometryFunction({ id }) { }        // new
+  dimensionFunction(id) { }            // old
+  dimensionFunction({ id }) { }        // new
   ```
 
   See [issue #19](https://github.com/samvera/node-iiif/issues/19) for context on why this change was made.
