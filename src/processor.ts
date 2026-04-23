@@ -163,10 +163,8 @@ export class Processor {
     return this;
   }
 
-  async withStream(
-    { id, baseUrl }: { id: string; baseUrl: string },
-    callback: (s: NodeJS.ReadableStream) => Promise<unknown>
-  ) {
+  async withStream(callback: (s: NodeJS.ReadableStream) => Promise<unknown>) {
+    const { id, baseUrl } = this;
     debug('Requesting stream for %s', id);
     if (this.streamResolver.length === 2) {
       return await (this.streamResolver as StreamResolverWithCallback)(
@@ -197,10 +195,7 @@ export class Processor {
         geometry.tileWidth = null;
         geometry.tileHeight = null;
       }
-      geometry = await readGeometry(
-        (callback) => this.withStream(params, callback),
-        geometry
-      );
+      geometry = await readGeometry(this.withStream.bind(this), geometry);
       this.imageGeometry = calculateGeometry(geometry);
     }
     return this.imageGeometry;
@@ -282,18 +277,15 @@ export class Processor {
     debugv('Operations: %j', operations);
     const pipeline = await operations.pipeline();
 
-    const result = await this.withStream(
-      { id: this.id, baseUrl: this.baseUrl },
-      async (stream) => {
-        debug('piping stream to pipeline');
-        let transformed = await stream.pipe(pipeline);
-        if (this.debugBorder) {
-          transformed = await this.applyBorder(transformed);
-        }
-        debug('converting to buffer');
-        return await transformed.toBuffer();
+    const result = await this.withStream(async (stream) => {
+      debug('piping stream to pipeline');
+      let transformed = await stream.pipe(pipeline);
+      if (this.debugBorder) {
+        transformed = await this.applyBorder(transformed);
       }
-    );
+      debug('converting to buffer');
+      return await transformed.toBuffer();
+    });
     debug('returning %d bytes', (result as Buffer).length);
     debug('baseUrl', this.baseUrl);
 

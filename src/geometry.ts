@@ -9,7 +9,7 @@ const debug = Debug('iiif:geometry');
 type StreamCallback = (stream: Readable) => Promise<unknown>;
 
 export async function readGeometry(
-  streamer: (callback: StreamCallback) => Promise<unknown>,
+  withStream: (callback: StreamCallback) => Promise<unknown>,
   geometry: ImageGeometry
 ): Promise<ImageGeometry> {
   let metadata = {};
@@ -23,14 +23,14 @@ export async function readGeometry(
     !geometry.height ||
     !(geometry.pages || geometry.sizes)
   ) {
-    await streamer(async (metadataStream) => {
+    await withStream(async (metadataStream) => {
       metadata = await readMetadata(metadataStream);
     });
     debug('Read metadata: %O', metadata);
   }
 
   if (geometry.tileWidth === undefined || geometry.tileHeight === undefined) {
-    await streamer(async (sizeStream) => {
+    await withStream(async (sizeStream) => {
       const size = await getTileSize(sizeStream);
       tileSize = { tileWidth: size.width, tileHeight: size.height };
     });
