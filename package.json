@@ -1,6 +1,6 @@
 {
   "name": "iiif-processor",
-  "version": "8.0.1",
+  "version": "8.0.2",
   "description": "IIIF 2.1 & 3.0 Image API modules for NodeJS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -52,6 +52,7 @@
     "lint": "eslint \"{src,tests}/**/*.{js,ts}\"",
     "lint:fix": "eslint --fix \"{src,tests}/**/*.{js,ts}\"",
     "lint:examples": "cd examples/tiny-iiif && npm run lint",
+    "postinstall": "if pkg-config vips 2>/dev/null; then npm explore sharp -- npm run build; fi",
     "test": "node scripts/test.js --env=node",
     "test:coverage": "node scripts/test.js --env=node --coverage",
     "validate": "npm run build && concurrently -s !command-server -k -n server,iiif --hide server -c blue,green \"cd examples/tiny-iiif && npm run validator\" \"cd validator && sleep 2 && uv run ./run-validator.sh\""
@@ -84,7 +85,7 @@
     "typescript-eslint": "^8.7.0"
   },
   "optionalDependencies": {
-    "sharp": "^0.34.4"
+    "sharp": "^0.35.0"
   },
   "jest": {
     "preset": "ts-jest",
