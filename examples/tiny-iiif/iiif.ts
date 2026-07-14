@@ -32,7 +32,7 @@ const render = async (req: any, res: any) => {
           .status(200)
           .send(result.body);
       case 'redirect':
-        return res.redirect(result.location, 302);
+        return res.redirect(result.location, 303);
       case 'error':
         return res
           .set('Content-Type', 'text/plain')
