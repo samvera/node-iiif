@@ -169,10 +169,15 @@ export class Base {
 
   rotation(v: string) {
     this._validate('rotation', v);
+    const degree = Number(v.replace(/^!/, ''));
+    // Spec: "any floating point number from 0 to 360" (inclusive)
+    if (degree < 0 || degree > 360) {
+      throw new IIIFError(`Invalid rotation: ${v}`, { statusCode: 400 });
+    }
     this._canonicalInfo.rotation = v;
     this._parsedInfo.rotation = {
       flop: v[0] === '!',
-      degree: Number(v.replace(/^!/, ''))
+      degree
     };
     return this;
   }
@@ -246,11 +251,15 @@ export class Base {
     let { left, top, width, height } = this._parsedInfo.region;
     left = Math.max(left, 0);
     top = Math.max(top, 0);
-    if (left > this.dims.width || top > this.dims.height) {
+    // Reject regions whose origin is outside the image bounds.
+    if (left >= this.dims.width || top >= this.dims.height) {
       throw new IIIFError('Region is out of bounds', { statusCode: 400 });
     }
     width = Math.min(width, this.dims.width - left);
     height = Math.min(height, this.dims.height - top);
+    if (width < 1 || height < 1) {
+      throw new IIIFError('Region is out of bounds', { statusCode: 400 });
+    }
     this._parsedInfo.region = { left, top, width, height };
   }
 }

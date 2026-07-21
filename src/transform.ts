@@ -1,5 +1,6 @@
 import Sharp, { Sharp as SharpType } from 'sharp';
 import Debug from 'debug';
+import { IIIFError } from './error';
 import { Versions } from './versions';
 import type { VersionModule, CalculatorLike, CalculatorOptions } from './contracts';
 import type { Dimensions, BoundingBox, Format } from './types';
@@ -92,8 +93,15 @@ export class Operations {
 
     const { format, quality, region, rotation: { flop, degree }, size } = this.info();
     scaleRegion(region, scale, this.pages[page]);
+    if (region.width < 1 || region.height < 1) {
+      throw new IIIFError('Requested region is too small to render', { statusCode: 400 });
+    }
+    clampSize(size);
 
-    pipeline.autoOrient().extract(region).resize(size);
+    pipeline.autoOrient().extract(region);
+    if (size.width !== region.width || size.height !== region.height || size.fit === 'inside') {
+      pipeline.resize(size);
+    }
     if (flop) pipeline.flop();
     pipeline.rotate(degree);
     if (quality === 'gray') pipeline.grayscale();
@@ -135,11 +143,20 @@ function scaleRegion (region: BoundingBox, scale: number, page: { width: number;
   region.top = Math.floor(region.top * scale);
   region.width = Math.floor(region.width * scale);
   region.height = Math.floor(region.height * scale);
-  region.left = Math.max(region.left, 0);
-  region.top = Math.max(region.top, 0);
-  region.width = Math.min(region.width, page.width);
-  region.height = Math.min(region.height, page.height);
+
+  // Clamp the scaled region to the selected page bounds.
+  region.left = Math.max(Math.min(region.left, page.width), 0);
+  region.top = Math.max(Math.min(region.top, page.height), 0);
+  region.width = Math.min(region.width, page.width - region.left);
+  region.height = Math.min(region.height, page.height - region.top);
   return region;
+}
+
+// Ensure calculated output dimensions are at least one pixel.
+function clampSize (size: { width?: number | null; height?: number | null }) {
+  if (typeof size.width === 'number') size.width = Math.max(size.width, 1);
+  if (typeof size.height === 'number') size.height = Math.max(size.height, 1);
+  return size;
 }
 
 export default { Operations };

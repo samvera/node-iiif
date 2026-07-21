@@ -145,6 +145,28 @@ describe('region', () => {
     assert.strictEqual(result.statusCode, 400);
     assert.match(result.message, /out of bounds/);
   });
+
+  it('returns 400 when the region origin is at the image edge', async () => {
+    subject = new Processor(
+      `${base}/621,0,10,10/full/0/default.png`,
+      streamResolver
+    );
+    const result = await subject.execute();
+    assert.strictEqual(result.type, 'error');
+    assert.strictEqual(result.statusCode, 400);
+    assert.match(result.message, /out of bounds/);
+  });
+
+  it('returns 400 when scaling makes a region dimension zero', async () => {
+    subject = new Processor(
+      `${base}/0,0,1,327/,163/0/default.png`,
+      streamResolver
+    );
+    const result = await subject.execute();
+    assert.strictEqual(result.type, 'error');
+    assert.strictEqual(result.statusCode, 400);
+    assert.match(result.message, /too small/);
+  });
 });
 
 describe('size', () => {
@@ -157,6 +179,14 @@ describe('size', () => {
       const result = await subject.execute();
       assert.strictEqual(result.contentType, 'image/png');
     });
+  });
+
+  it('clamps extreme downscales to 1 pixel instead of failing', async () => {
+    subject = new Processor(`${base}/full/1,/0/default.png`, streamResolver);
+    const result = await subject.execute();
+    const size = await Sharp(result.body).metadata();
+    assert.strictEqual(size.width, 1);
+    assert.strictEqual(size.height, 1);
   });
 
   it('should require valid size', async () => {
@@ -255,6 +285,25 @@ describe('Two-argument streamResolver', () => {
     assert.strictEqual(size.width, 25);
     assert.strictEqual(size.height, 25);
     assert.strictEqual(size.format, 'png');
+  });
+});
+
+describe('Non-file stream input', () => {
+  it('produces the same output as a file-backed stream', async () => {
+    const bufferResolver: any = async () => {
+      const { Readable } = await import('stream');
+      return Readable.from(
+        fs.readFileSync('./tests/fixtures/samvera_256.tif')
+      );
+    };
+    const url = `${base}/10,20,30,40/pct:50/45/default.png`;
+    const fromStream: any = await new Processor(url, bufferResolver).execute();
+    const fromFile: any = await new Processor(url, streamResolver).execute();
+    const streamMeta = await Sharp(fromStream.body).metadata();
+    const fileMeta = await Sharp(fromFile.body).metadata();
+    assert.strictEqual(streamMeta.width, fileMeta.width);
+    assert.strictEqual(streamMeta.height, fileMeta.height);
+    assert.strictEqual(streamMeta.format, 'png');
   });
 });
 

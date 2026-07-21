@@ -1,7 +1,7 @@
 import Debug from 'debug';
 import mime from 'mime-types';
 import path from 'path';
-import sharp from 'sharp';
+import sharp, { type Sharp, type Create } from 'sharp';
 import { calculateGeometry, readGeometry } from './geometry';
 import { Operations } from './transform';
 import { IIIFError } from './error';
@@ -243,23 +243,23 @@ export class Processor {
       .withMetadata(this.includeMetadata);
   }
 
-  async applyBorder(transformed: sharp.Sharp) {
+  async applyBorder(transformed: Sharp) {
     const buf = await transformed.toBuffer();
     const borderPipe = sharp(buf, { limitInputPixels: false });
     const { width, height } = await borderPipe.metadata();
     const background = { r: 255, g: 0, b: 0, alpha: 1 };
 
     const topBorder = {
-      create: { width, height: 1, channels: 4, background } as sharp.Create
+      create: { width, height: 1, channels: 4, background } as Create
     };
     const bottomBorder = {
-      create: { width, height: 1, channels: 4, background } as sharp.Create
+      create: { width, height: 1, channels: 4, background } as Create
     };
     const leftBorder = {
-      create: { width: 1, height, channels: 4, background } as sharp.Create
+      create: { width: 1, height, channels: 4, background } as Create
     };
     const rightBorder = {
-      create: { width: 1, height, channels: 4, background } as sharp.Create
+      create: { width: 1, height, channels: 4, background } as Create
     };
 
     return borderPipe.composite([
