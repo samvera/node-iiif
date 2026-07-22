@@ -71,6 +71,16 @@ describe('Calculator', () => {
   it('rotation', () => {
     rotations.forEach((value) => assert.doesNotThrow(() => subject.rotation(value), IIIFError));
     assert.throws(() => subject.rotation('badValue'), IIIFError);
+    assert.doesNotThrow(() => subject.rotation('360'), IIIFError);
+    assert.throws(() => subject.rotation('361'), IIIFError);
+    assert.throws(() => subject.rotation('!360.5'), IIIFError);
+  });
+
+  it('region out of bounds', () => {
+    assert.throws(() => subject.region('1024,0,10,10'), IIIFError);
+    assert.throws(() => subject.region('0,768,10,10'), IIIFError);
+    assert.throws(() => subject.region('pct:100,0,10,10'), IIIFError);
+    assert.doesNotThrow(() => subject.region('1023,767,10,10'), IIIFError);
   });
 
   it('info with pct:region', () => {

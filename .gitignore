@@ -5,5 +5,5 @@ node_modules
 .vscode
 reports
 dist
-**/package-lock.json
+examples/**/package-lock.json
 bun.lock*
