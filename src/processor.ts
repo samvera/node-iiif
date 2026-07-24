@@ -15,6 +15,7 @@ import type {
   RedirectResult
 } from './types';
 import type { VersionModule } from './contracts';
+import { C2PASigner, C2PASignerOptions } from './c2pa';
 
 const debug = Debug('iiif-processor:main');
 const debugv = Debug('verbose:iiif-processor');
@@ -65,6 +66,7 @@ export type ProcessorOptions = {
   pathPrefix?: string;
   sharpOptions?: Record<string, unknown>;
   request?: string;
+  c2pa?: C2PASignerOptions;
 };
 
 export class Processor {
@@ -95,6 +97,7 @@ export class Processor {
   density?: number | null;
   debugBorder = false;
   pageThreshold?: number;
+  c2pa?: C2PASignerOptions;
 
   constructor(
     url: string,
@@ -139,6 +142,7 @@ export class Processor {
     this.sharpOptions = { ...opts.sharpOptions };
     this.version = Number(opts.iiifVersion);
     this.request = opts.request;
+    this.c2pa = opts.c2pa;
     return this;
   }
 
@@ -244,6 +248,7 @@ export class Processor {
   }
 
   async applyBorder(transformed: Sharp) {
+    debug('applying debug border to image');
     const buf = await transformed.toBuffer();
     const borderPipe = sharp(buf, { limitInputPixels: false });
     const { width, height } = await borderPipe.metadata();
@@ -270,6 +275,40 @@ export class Processor {
     ]);
   }
 
+  async addC2paCredentials(data: Buffer): Promise<Buffer> {
+    if (!this.c2pa) return data;
+
+    return (await this.withStream(async (stream) => {
+      const signer = new C2PASigner(stream, this.c2pa);
+      const actions = [];
+
+      actions.push({
+        action: 'c2pa.edited',
+        softwareAgent: `iiif-processor (https://github.com/samvera/node-iiif)`,
+        parameters: {
+          outputFormat: mime.lookup(this.format) as string,
+          description: `Transformed according to IIIF Image API v${this.version} with the following parameters: { region: "${this.region}", size: "${this.size}", rotation: "${this.rotation}", quality: "${this.quality}", format: ${this.format} }`
+        }
+      });
+
+      if (this.debugBorder) {
+        actions.push({
+          action: 'c2pa.edited',
+          softwareAgent: `iiif-processor (https://github.com/samvera/node-iiif)`,
+          parameters: {
+            outputFormat: mime.lookup(this.format) as string,
+            description: 'Applied 1px red border to image'
+          }
+        });
+      }
+      return await signer.addContentCredentials(
+        { data, type: mime.lookup(this.format) as string },
+        'edit',
+        actions
+      );
+    })) as Buffer;
+  }
+
   async iiifImage() {
     debugv('Request %s', this.request);
     const geometry = await this.geometry();
@@ -277,7 +316,7 @@ export class Processor {
     debugv('Operations: %j', operations);
     const pipeline = await operations.pipeline();
 
-    const result = await this.withStream(async (stream) => {
+    let result: Buffer = (await this.withStream(async (stream) => {
       debug('piping stream to pipeline');
       let transformed = await stream.pipe(pipeline);
       if (this.debugBorder) {
@@ -285,7 +324,10 @@ export class Processor {
       }
       debug('converting to buffer');
       return await transformed.toBuffer();
-    });
+    })) as Buffer;
+
+    result = await this.addC2paCredentials(result);
+
     debug('returning %d bytes', (result as Buffer).length);
     debug('baseUrl', this.baseUrl);
 

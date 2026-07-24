@@ -7,5 +7,5 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ['sharp'],
+  external: ['sharp', '@contentauth/c2pa-node'],
 });

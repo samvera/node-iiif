@@ -13,4 +13,5 @@ export {
   ErrorResult,
   ProcessorResult
 } from './types';
+export { C2PASignerOptions } from './c2pa';
 export { Versions } from './versions';

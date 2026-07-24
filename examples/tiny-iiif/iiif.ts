@@ -1,25 +1,46 @@
 import { App } from '@tinyhttp/app';
 import { Processor, IIIFError, ProcessorResult } from 'iiif-processor';
 import fs from 'fs';
+import mime from 'mime-types';
 import path from 'path';
 import { iiifImagePath, iiifpathPrefix, fileTemplate } from './config';
 
 const streamImageFromFile = async ({ id }: { id: string }) => {
-  const filename = fileTemplate.replace(/\{\{id\}\}/, id);
-  const file = path.join(iiifImagePath, filename);
+  const file = resolveFilePath(id);
   if (!fs.existsSync(file)) {
     throw new IIIFError('Not Found', { statusCode: 404 });
   }
   return fs.createReadStream(file);
 };
 
+const resolveFilePath = (id: string) => {
+  const filename = fileTemplate.replace(/\{\{id\}\}/, id);
+  return path.join(iiifImagePath, filename);
+};
+
 const render = async (req: any, res: any) => {
   try {
     const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
+
     const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, {
       pathPrefix: iiifpathPrefix,
       debugBorder: !!process.env.DEBUG_IIIF_BORDER
     });
+
+    if (
+      process.env.C2PA_CERTIFICATE &&
+      process.env.C2PA_KEY &&
+      req.query.c2pa === 'true'
+    ) {
+      iiifProcessor.c2pa = {
+        certificate: process.env.C2PA_CERTIFICATE,
+        key: process.env.C2PA_KEY,
+        mimeType:
+          (mime.lookup(resolveFilePath(iiifProcessor.id)) as string) ||
+          'application/octet-stream',
+        tsaUrl: 'http://timestamp.digicert.com'
+      };
+    }
     const result: ProcessorResult = await iiifProcessor.execute();
     switch (result.type) {
       case 'content':
