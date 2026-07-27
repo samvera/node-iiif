@@ -55,6 +55,12 @@ export type StreamResolverWithCallback = (
   input: { id: string; baseUrl: string },
   callback: (stream: NodeJS.ReadableStream) => Promise<unknown>
 ) => Promise<unknown>;
+type C2PAResolverResult = C2PASignerOptions | undefined;
+export type C2PAResolver =
+  | C2PAResolverResult
+  | ((
+      processor: Processor
+    ) => C2PAResolverResult | Promise<C2PAResolverResult>);
 export type ProcessorOptions = {
   geometryFunction?: GeometryFunction;
   max?: { width: number; height?: number; area?: number };
@@ -66,7 +72,7 @@ export type ProcessorOptions = {
   pathPrefix?: string;
   sharpOptions?: Record<string, unknown>;
   request?: string;
-  c2pa?: C2PASignerOptions;
+  c2pa?: C2PAResolver;
 };
 
 export class Processor {
@@ -97,7 +103,7 @@ export class Processor {
   density?: number | null;
   debugBorder = false;
   pageThreshold?: number;
-  c2pa?: C2PASignerOptions;
+  c2pa?: C2PAResolver;
 
   constructor(
     url: string,
@@ -278,8 +284,17 @@ export class Processor {
   async addC2paCredentials(data: Buffer): Promise<Buffer> {
     if (!this.c2pa) return data;
 
+    debug('adding C2PA credentials to image');
     return (await this.withStream(async (stream) => {
-      const signer = new C2PASigner(stream, this.c2pa);
+      let c2pa: C2PAResolverResult;
+      if (typeof this.c2pa === 'function') {
+        c2pa = await this.c2pa(this);
+      } else {
+        c2pa = this.c2pa;
+      }
+      if (!c2pa) return data;
+
+      const signer = new C2PASigner(stream, c2pa);
       const actions = [];
 
       actions.push({
@@ -287,7 +302,7 @@ export class Processor {
         softwareAgent: `iiif-processor (https://github.com/samvera/node-iiif)`,
         parameters: {
           outputFormat: mime.lookup(this.format) as string,
-          description: `Transformed according to IIIF Image API v${this.version} with the following parameters: { region: "${this.region}", size: "${this.size}", rotation: "${this.rotation}", quality: "${this.quality}", format: ${this.format} }`
+          description: `Transformed according to IIIF Image API v${this.version} with the following parameters: { region: "${this.region}", size: "${this.size}", rotation: "${this.rotation}", quality: "${this.quality}", format: "${this.format}" }`
         }
       });
 
@@ -326,9 +341,9 @@ export class Processor {
       return await transformed.toBuffer();
     })) as Buffer;
 
+    debug('generated %d bytes', result.length);
     result = await this.addC2paCredentials(result);
-
-    debug('returning %d bytes', (result as Buffer).length);
+    debug('returning %d bytes', result.length);
     debug('baseUrl', this.baseUrl);
 
     const canonicalUrl = new URL(
@@ -340,7 +355,7 @@ export class Processor {
       canonicalLink: canonicalUrl.toString(),
       profileLink: this.Implementation.profileLink,
       contentType: mime.lookup(this.format) as string,
-      body: result as Buffer
+      body: result
     } as ContentResult;
   }
 

@@ -1,5 +1,6 @@
 export { IIIFError } from './error';
 export {
+  C2PAResolver,
   GeometryFunction,
   StreamResolver,
   StreamResolverWithCallback,

@@ -18,29 +18,32 @@ const resolveFilePath = (id: string) => {
   return path.join(iiifImagePath, filename);
 };
 
+const c2paResolver = ({ id }: { id: string }) => {
+  return {
+    certificate: process.env.C2PA_CERTIFICATE,
+    key: process.env.C2PA_KEY,
+    mimeType:
+      (mime.lookup(resolveFilePath(id)) as string) ||
+      'application/octet-stream',
+    tsaUrl: 'http://timestamp.digicert.com'
+  };
+};
+
 const render = async (req: any, res: any) => {
   try {
+    const c2pa =
+      process.env.C2PA_CERTIFICATE &&
+      process.env.C2PA_KEY &&
+      req.query.c2pa === 'true';
+
     const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
 
     const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, {
       pathPrefix: iiifpathPrefix,
-      debugBorder: !!process.env.DEBUG_IIIF_BORDER
+      debugBorder: !!process.env.DEBUG_IIIF_BORDER,
+      c2pa: c2pa ? c2paResolver : undefined
     });
 
-    if (
-      process.env.C2PA_CERTIFICATE &&
-      process.env.C2PA_KEY &&
-      req.query.c2pa === 'true'
-    ) {
-      iiifProcessor.c2pa = {
-        certificate: process.env.C2PA_CERTIFICATE,
-        key: process.env.C2PA_KEY,
-        mimeType:
-          (mime.lookup(resolveFilePath(iiifProcessor.id)) as string) ||
-          'application/octet-stream',
-        tsaUrl: 'http://timestamp.digicert.com'
-      };
-    }
     const result: ProcessorResult = await iiifProcessor.execute();
     switch (result.type) {
       case 'content':

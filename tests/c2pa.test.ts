@@ -200,16 +200,20 @@ describe('C2PASigner', () => {
       expect(builderMock.addIngredient).toHaveBeenCalled();
     });
 
-    it('re-throws unexpected errors from addIngredientFromReader', async () => {
+    it('degrades gracefully on unexpected errors from addIngredientFromReader', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
       builderMock.addIngredientFromReader.mockImplementation(() => {
         throw new Error('boom');
       });
 
       const signer = new C2PASigner(makeStream(), { certificate: CERTIFICATE, key: 'fake-key' });
+      const data = Buffer.from('x');
 
-      await expect(
-        signer.addContentCredentials({ data: Buffer.from('x'), type: 'image/jpeg' }, 'edit', [])
-      ).rejects.toThrow('boom');
+      const result = await signer.addContentCredentials({ data, type: 'image/jpeg' }, 'edit', []);
+
+      expect(result).toBe(data);
+      expect(builderMock.signAsync).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('boom'));
     });
   });
 });

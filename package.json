@@ -128,8 +128,5 @@
     "moduleDirectories": [
       "node_modules"
     ]
-  },
-  "allowScripts": {
-    "@contentauth/c2pa-node@0.7.0": true
   }
 }

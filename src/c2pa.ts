@@ -1,8 +1,12 @@
-import type { Action, BuilderIntent } from "@contentauth/c2pa-types";
-import { sign as signRaw } from "node:crypto";
+import Debug from 'debug';
+import type { Action, BuilderIntent } from '@contentauth/c2pa-types';
+import { sign as signRaw } from 'node:crypto';
+import { inspect } from 'node:util';
 
-type C2paNodeModule = typeof import("@contentauth/c2pa-node");
-type ReaderInstance = InstanceType<C2paNodeModule["Reader"]>;
+const debug = Debug('iiif-processor:c2pa');
+
+type C2paNodeModule = typeof import('@contentauth/c2pa-node');
+type ReaderInstance = InstanceType<C2paNodeModule['Reader']>;
 
 let c2paNodeModule: Promise<C2paNodeModule | null> | undefined;
 
@@ -11,7 +15,7 @@ let c2paNodeModule: Promise<C2paNodeModule | null> | undefined;
 // it's loaded lazily and failures here just disable signing.
 function loadC2paNode(): Promise<C2paNodeModule | null> {
   if (!c2paNodeModule) {
-    c2paNodeModule = import("@contentauth/c2pa-node").catch((err) => {
+    c2paNodeModule = import('@contentauth/c2pa-node').catch((err) => {
       console.warn(
         `@contentauth/c2pa-node is not available; content credentials will not be added. (${err.message})`
       );
@@ -39,68 +43,101 @@ export class C2PASigner {
     this.opts = opts;
   }
 
-  async addContentCredentials(content: { data: Buffer, type: string }, intent: BuilderIntent, actions: Action[] = []): Promise<Buffer> {
-    const { certificate: cert, key, mimeType, tsaUrl, reserveSize = 20_000 } = this.opts || {};
-    if (!cert || !key) return content.data;
-
-    const c2pa = await loadC2paNode();
-    if (!c2pa) return content.data;
-    const { Builder, CallbackSigner, Reader } = c2pa;
-
-    const builder = Builder.new();
-    builder.setIntent(intent);
-    const { reader, buffer } = await this.#getActiveReader(Reader);
-
+  async addContentCredentials(
+    content: { data: Buffer; type: string },
+    intent: BuilderIntent,
+    actions: Action[] = []
+  ): Promise<Buffer> {
     try {
-      builder.addIngredientFromReader(reader);
-    } catch (err) {
-      if (!reader || err.message.includes('ingredient file not found')) {
-        console.warn(
-          `addIngredientFromReader failed; adding ingredient from buffer instead`
-        );
-        const manifest = reader?.getActive();
-
-        const ingredientContent = {
-          title: manifest?.title,
-          format: manifest?.format || mimeType,
-          instance_id: manifest?.instance_id,
-          relationship: 'parentOf'
-        };
-
-        await builder.addIngredient(JSON.stringify(ingredientContent), {
-          buffer,
-          mimeType
-        });
-      } else {
-        throw err;
-      }
-    }
-
-    builder.addAssertion(
-      'c2pa.actions',
-      {
-        actions: actions || []
-      },
-      'Cbor'
-    );
-
-    const signer = CallbackSigner.newSigner(
-      {
-        alg: 'es256',
-        certs: [Buffer.from(cert)],
-        reserveSize,
+      const {
+        certificate: cert,
+        key,
+        mimeType,
         tsaUrl,
-        directCoseHandling: false
-      },
-      async (data: Buffer) => signRaw('sha256', data, { key, dsaEncoding: 'ieee-p1363' })
-    );
+        reserveSize = 20_000
+      } = this.opts || {};
+      if (!cert || !key) return content.data;
 
-    const output = { buffer: null };
-    await builder.signAsync(signer, { buffer: content.data, mimeType: content.type }, output);
-    return output.buffer;
-  };
+      const c2pa = await loadC2paNode();
+      if (!c2pa) return content.data;
+      const { Builder, CallbackSigner, Reader } = c2pa;
 
-  async #getActiveReader(Reader: C2paNodeModule["Reader"]): Promise<{ reader: ReaderInstance; buffer: Buffer }> {
+      const builder = Builder.new();
+      builder.setIntent(intent);
+      const { reader, buffer } = await this.#getActiveReader(Reader);
+
+      try {
+        builder.addIngredientFromReader(reader);
+      } catch (err) {
+        if (!reader || err.message.includes('ingredient file not found')) {
+          console.warn(
+            `addIngredientFromReader failed; adding ingredient from buffer instead`
+          );
+          const manifest = reader?.getActive();
+
+          const ingredientContent = {
+            title: manifest?.title,
+            format: manifest?.format || mimeType,
+            instance_id: manifest?.instance_id,
+            relationship: 'parentOf'
+          };
+
+          debug(
+            `Adding ingredient with content: ${inspect(ingredientContent)}`
+          );
+          await builder.addIngredient(JSON.stringify(ingredientContent), {
+            buffer,
+            mimeType
+          });
+          debug('Ingredient added from buffer');
+        } else {
+          throw err;
+        }
+      }
+
+      debug(`Adding assertion with actions: ${inspect(actions)}`);
+      builder.addAssertion(
+        'c2pa.actions',
+        {
+          actions: actions || []
+        },
+        'Cbor'
+      );
+      debug('Assertion added');
+
+      debug('Creating signer for content credentials');
+      const signer = CallbackSigner.newSigner(
+        {
+          alg: 'es256',
+          certs: [Buffer.from(cert)],
+          reserveSize,
+          tsaUrl: tsaUrl || undefined,
+          directCoseHandling: false
+        },
+        async (data: Buffer) =>
+          signRaw('sha256', data, { key, dsaEncoding: 'ieee-p1363' })
+      );
+
+      const output = { buffer: null };
+      debug('Signing content credentials');
+      await builder.signAsync(
+        signer,
+        { buffer: content.data, mimeType: content.type },
+        output
+      );
+      debug('Content credentials signed successfully');
+      return output.buffer;
+    } catch (err) {
+      console.warn(
+        `Failed to add content credentials; returning original content. (${inspect(err)})`
+      );
+      return content.data;
+    }
+  }
+
+  async #getActiveReader(
+    Reader: C2paNodeModule['Reader']
+  ): Promise<{ reader: ReaderInstance; buffer: Buffer }> {
     const buffer = await this.#getBuffer();
     const reader = await Reader.fromAsset({
       buffer,
