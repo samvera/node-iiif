@@ -35,6 +35,7 @@ const processor = new Processor(url, streamResolver, opts);
   * `pageThreshold` (integer) – the fudge factor (in number of pixels) to mitigate rounding errors in pyramid page selection (default: `1`)
   * `pathPrefix` (string) – the template used to extract the IIIF version and API parameters from the URL path (default: `/iiif/{{version}}/`) ([see below](#path-prefix))
   * `version` (number) – the major version (`2` or `3`) of the IIIF Image API to use (default: inferred from `/iiif/{version}/`)
+  * `c2pa` (object) – *experimental* – optional configuration for signing generated images with C2PA content credentials ([see below](#c2pa-content-credentials))
 
 ## Examples
 
@@ -152,6 +153,80 @@ The `pathPrefix` constructor option provides a tremendous amount of flexibility 
 * The `pathPrefix` _must_ start and end with `/`.
 * The `pathPrefix` _must_ include the `{{version}}` placeholder _unless_ the `version` constructor option is specified. If both are present, the constructor option will take precedence.
 * To allow for maximum flexibility, the `pathPrefix` is interpreted as a [JavaScript regular expression](https://www.w3schools.com/jsref/jsref_obj_regexp.asp). For example, `/.+?/iiif/{{version}}/` would allow your path to have arbitrary path elements before `/iiif/`. Be careful when including greedy quantifiers (e.g., `+` as opposed to `+?`), as they may produce unexpected results. `/` characters are treated as literal path separators, not regular expression delimiters as they would be in JavaScript code.
+
+### C2PA Content Credentials
+
+> [!WARNING]
+> **C2PA support is experimental and subject to change at any time.** The `c2pa` option, its configuration fields,
+> the contents of the generated manifests, and the optional dependencies it relies on may change or be removed in
+> any release, including minor and patch releases, without a deprecation period. Pin an exact `iiif-processor`
+> version if you depend on it, and re-validate signed output after upgrading.
+
+[C2PA](https://c2pa.org/) (the Coalition for Content Provenance and Authenticity) is an open technical standard for
+attaching verifiable, tamper-evident provenance information — "Content Credentials" — to media files: where it
+came from, and what's been done to it. See [How It Works](https://contentcredentials.org/how-it-works) for a
+plain-language overview, [Verify](https://contentcredentials.org/verify) for a tool that inspects a file's content
+credentials, and the [C2PA Technical Specification](https://spec.c2pa.org/specifications/specifications/2.3/specs/C2PA_Specification.html)
+for the full standard.
+
+If a `c2pa` option is supplied, every image `iiif-processor` generates is signed with a manifest recording the IIIF
+transformation that was applied (region, size, rotation, quality, and format), using
+[`c2pa-node`](https://github.com/contentauth/c2pa-js), the official Node.js C2PA library.
+
+Signing relies on two *optional* dependencies of `iiif-processor`:
+[`@nulib/c2pa-signing`](https://github.com/nulib/c2pa-signing), which builds the manifest, the COSE signature, and
+the RFC 3161 timestamp, and `@contentauth/c2pa-node`, which it drives and which bundles a native addon. Most
+consumers don't need either. If they aren't installed, or fail to load for any reason, `iiif-processor` logs a
+warning and returns images unsigned rather than failing the request. To enable signing, install them alongside
+`iiif-processor`:
+
+```sh
+npm install @nulib/c2pa-signing @contentauth/c2pa-node --save
+```
+
+C2PA signing requires **Node.js 22 or later**, the minimum supported by `@contentauth/c2pa-node`. The rest of
+`iiif-processor` doesn't depend on it, so on older Node versions the optional dependencies may log engine warnings
+at install time, and images are returned unsigned (with a warning) instead.
+
+Then pass a `c2pa` option to the `Processor` constructor:
+
+```typescript
+import { readFileSync } from "fs";
+import { Processor } from "iiif-processor";
+
+const processor = new Processor(url, streamResolver, {
+  c2pa: {
+    certificate: readFileSync("./signing-cert.pem", "utf8"),
+    key: readFileSync("./signing-key.pem", "utf8")
+  }
+});
+```
+
+* `certificate` (string, required) – a PEM-encoded X.509 certificate (or certificate chain) matching `key`, used to
+  sign the manifest. This needs to be an EC certificate on the P-256 curve, since `es256` is currently the only
+  supported signing algorithm. For production use, it needs to chain to a Certificate Authority recognized by
+  C2PA's trust requirements; a self-signed or otherwise untrusted certificate will still produce a valid manifest,
+  but validators will flag the signer as untrusted.
+* `key` (string, required) – the PEM-encoded EC (P-256) private key matching `certificate`.
+* `softwareAgent` (string, required) – the name of the application using `node-iiif`; this value will be included in the signed manifest
+* `mimeType` (string) – the MIME type of the *source* asset, used to read any existing content credentials from it
+  so they can be carried forward as a parent ingredient. Defaults to `application/octet-stream` (no existing
+  manifest will be read).
+* `tsaUrl` (string) – the URL of an [RFC 3161](https://en.wikipedia.org/wiki/Trusted_timestamping) Time Stamp
+  Authority. If omitted, the manifest won't include a trusted timestamp, which some validators flag as an issue.
+  If the TSA can't be reached or refuses the request, the image is returned unsigned (with a warning) rather than
+  signed without a timestamp.
+* `reserveSize` (number) – bytes reserved in the asset for the signature block (default: `20000`). The certificate
+  chain and, if configured, the timestamp authority's response both need to fit in this space; if signing fails
+  with a "COSE signature does not fit in reserveSize" error, increase this value.
+
+`certificate` and `key` need to contain real newlines. If yours come from an environment variable or a JSON config
+file where newlines were flattened into literal `\n` sequences (a common issue with, e.g., `.vscode/launch.json`),
+convert them back before passing them in (e.g., `key.replace(/\\n/g, "\n")`).
+
+Each signed image records a `c2pa.edited` action identifying `iiif-processor` as the software agent and describing
+the specific IIIF transform that was applied. If `debugBorder` is also enabled, a second action records that a
+debug border was applied.
 
 ### Processing
 

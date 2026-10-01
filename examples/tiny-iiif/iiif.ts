@@ -1,25 +1,50 @@
 import { App } from '@tinyhttp/app';
 import { Processor, IIIFError, ProcessorResult } from 'iiif-processor';
 import fs from 'fs';
+import mime from 'mime-types';
 import path from 'path';
 import { iiifImagePath, iiifpathPrefix, fileTemplate } from './config';
 
 const streamImageFromFile = async ({ id }: { id: string }) => {
-  const filename = fileTemplate.replace(/\{\{id\}\}/, id);
-  const file = path.join(iiifImagePath, filename);
+  const file = resolveFilePath(id);
   if (!fs.existsSync(file)) {
     throw new IIIFError('Not Found', { statusCode: 404 });
   }
   return fs.createReadStream(file);
 };
 
+const resolveFilePath = (id: string) => {
+  const filename = fileTemplate.replace(/\{\{id\}\}/, id);
+  return path.join(iiifImagePath, filename);
+};
+
+const c2paResolver = ({ id }: { id: string }) => {
+  return {
+    certificate: process.env.C2PA_CERTIFICATE,
+    key: process.env.C2PA_KEY,
+    mimeType:
+      (mime.lookup(resolveFilePath(id)) as string) ||
+      'application/octet-stream',
+    tsaUrl: 'http://timestamp.digicert.com',
+    softwareAgent: 'tiny-iiif'
+  };
+};
+
 const render = async (req: any, res: any) => {
   try {
+    const c2pa =
+      process.env.C2PA_CERTIFICATE &&
+      process.env.C2PA_KEY &&
+      req.query.c2pa === 'true';
+
     const iiifUrl = `${req.protocol}://${req.get('host')}${req.path}`;
+
     const iiifProcessor = new Processor(iiifUrl, streamImageFromFile, {
       pathPrefix: iiifpathPrefix,
-      debugBorder: !!process.env.DEBUG_IIIF_BORDER
+      debugBorder: !!process.env.DEBUG_IIIF_BORDER,
+      c2pa: c2pa ? c2paResolver : undefined
     });
+
     const result: ProcessorResult = await iiifProcessor.execute();
     switch (result.type) {
       case 'content':

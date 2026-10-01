@@ -15,6 +15,8 @@ import type {
   RedirectResult
 } from './types';
 import type { VersionModule } from './contracts';
+import { C2PASigner, C2PASignerOptions } from './c2pa';
+import { c2paActions, type C2PAActionParameters } from './c2pa_actions';
 
 const debug = Debug('iiif-processor:main');
 const debugv = Debug('verbose:iiif-processor');
@@ -54,6 +56,17 @@ export type StreamResolverWithCallback = (
   input: { id: string; baseUrl: string },
   callback: (stream: NodeJS.ReadableStream) => Promise<unknown>
 ) => Promise<unknown>;
+type C2PAResolverResult = C2PASignerOptions | undefined;
+/**
+ * C2PA signing configuration, or a function resolving it per request.
+ *
+ * @experimental C2PA support may change or be removed in any release, without a deprecation period.
+ */
+export type C2PAResolver =
+  | C2PAResolverResult
+  | ((
+      processor: Processor
+    ) => C2PAResolverResult | Promise<C2PAResolverResult>);
 export type ProcessorOptions = {
   geometryFunction?: GeometryFunction;
   max?: { width: number; height?: number; area?: number };
@@ -65,6 +78,12 @@ export type ProcessorOptions = {
   pathPrefix?: string;
   sharpOptions?: Record<string, unknown>;
   request?: string;
+  /**
+   * Sign generated images with C2PA content credentials.
+   *
+   * @experimental C2PA support may change or be removed in any release, without a deprecation period.
+   */
+  c2pa?: C2PAResolver;
 };
 
 export class Processor {
@@ -95,6 +114,7 @@ export class Processor {
   density?: number | null;
   debugBorder = false;
   pageThreshold?: number;
+  c2pa?: C2PAResolver;
 
   constructor(
     url: string,
@@ -139,6 +159,7 @@ export class Processor {
     this.sharpOptions = { ...opts.sharpOptions };
     this.version = Number(opts.iiifVersion);
     this.request = opts.request;
+    this.c2pa = opts.c2pa;
     return this;
   }
 
@@ -244,6 +265,7 @@ export class Processor {
   }
 
   async applyBorder(transformed: Sharp) {
+    debug('applying debug border to image');
     const buf = await transformed.toBuffer();
     const borderPipe = sharp(buf, { limitInputPixels: false });
     const { width, height } = await borderPipe.metadata();
@@ -270,6 +292,29 @@ export class Processor {
     ]);
   }
 
+  async addC2paCredentials(data: Buffer): Promise<Buffer> {
+    if (!this.c2pa) return data;
+
+    debug('adding C2PA credentials to image');
+    return (await this.withStream(async (stream) => {
+      let c2pa: C2PAResolverResult;
+      if (typeof this.c2pa === 'function') {
+        c2pa = await this.c2pa(this);
+      } else {
+        c2pa = this.c2pa;
+      }
+      if (!c2pa) return data;
+
+      const signer = new C2PASigner(stream, c2pa);
+
+      return await signer.addContentCredentials(
+        { data, type: mime.lookup(this.format) as string },
+        'edit',
+        c2paActions(c2pa.softwareAgent, this as C2PAActionParameters)
+      );
+    })) as Buffer;
+  }
+
   async iiifImage() {
     debugv('Request %s', this.request);
     const geometry = await this.geometry();
@@ -277,7 +322,7 @@ export class Processor {
     debugv('Operations: %j', operations);
     const pipeline = await operations.pipeline();
 
-    const result = await this.withStream(async (stream) => {
+    let result: Buffer = (await this.withStream(async (stream) => {
       debug('piping stream to pipeline');
       let transformed = await stream.pipe(pipeline);
       if (this.debugBorder) {
@@ -285,8 +330,11 @@ export class Processor {
       }
       debug('converting to buffer');
       return await transformed.toBuffer();
-    });
-    debug('returning %d bytes', (result as Buffer).length);
+    })) as Buffer;
+
+    debug('generated %d bytes', result.length);
+    result = await this.addC2paCredentials(result);
+    debug('returning %d bytes', result.length);
     debug('baseUrl', this.baseUrl);
 
     const canonicalUrl = new URL(
@@ -298,7 +346,7 @@ export class Processor {
       canonicalLink: canonicalUrl.toString(),
       profileLink: this.Implementation.profileLink,
       contentType: mime.lookup(this.format) as string,
-      body: result as Buffer
+      body: result
     } as ContentResult;
   }
 

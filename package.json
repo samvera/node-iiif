@@ -54,7 +54,8 @@
     "lint:examples": "cd examples/tiny-iiif && npm run lint",
     "test": "node scripts/test.js --env=node",
     "test:coverage": "node scripts/test.js --env=node --coverage",
-    "validate": "npm run build && concurrently -s !command-server -k -n server,iiif --hide server -c blue,green \"cd examples/tiny-iiif && npm run validator\" \"cd validator && sleep 2 && uv run ./run-validator.sh\""
+    "validate": "npm run build && concurrently -s !command-server -k -n server,iiif --hide server -c blue,green \"cd examples/tiny-iiif && npm run validator\" \"cd validator && sleep 2 && uv run ./run-validator.sh\"",
+    "test:integration": "tsx --test --test-force-exit tests/integration/c2paChain.mts"
   },
   "keywords": [
     "iiif",
@@ -81,12 +82,20 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.7.0"
   },
   "optionalDependencies": {
-    "sharp": "^0.35.0"
+    "@contentauth/c2pa-node": "~0.9.8",
+    "@contentauth/c2pa-types": "~0.7.5",
+    "@nulib/c2pa-signing": "^0.1.0",
+    "sharp": "^0.35.5"
   },
+  "trustedDependencies": [
+    "@contentauth/c2pa-node",
+    "sharp"
+  ],
   "jest": {
     "preset": "ts-jest",
     "transform": {
@@ -122,5 +131,8 @@
     "moduleDirectories": [
       "node_modules"
     ]
+  },
+  "allowScripts": {
+    "@contentauth/c2pa-node@0.9.8": true
   }
 }

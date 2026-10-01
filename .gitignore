@@ -7,3 +7,4 @@ reports
 dist
 examples/**/package-lock.json
 bun.lock*
+tests/.fixture-cache

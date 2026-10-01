@@ -1,5 +1,6 @@
 export { IIIFError } from './error';
 export {
+  C2PAResolver,
   GeometryFunction,
   StreamResolver,
   StreamResolverWithCallback,
@@ -13,4 +14,5 @@ export {
   ErrorResult,
   ProcessorResult
 } from './types';
+export { C2PASignerOptions } from './c2pa';
 export { Versions } from './versions';
