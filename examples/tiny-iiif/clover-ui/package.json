@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@samvera/clover-iiif": "^3.16.2",
+    "concurrently": "^9.2.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
